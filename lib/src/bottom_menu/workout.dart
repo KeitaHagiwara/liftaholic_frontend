@@ -22,6 +22,7 @@ class WorkoutScreen extends StatelessWidget {
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
+        backgroundColor: Colors.blue,
       ),
     );
   }

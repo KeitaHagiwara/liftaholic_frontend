@@ -83,9 +83,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                                   items[index]['volumeInfo']['imageLinks']
                                       ['thumbnail'],
                                 ),
-                                Text('A random AWESOME idea:'),
-                                Text(items[index]['volumeInfo']['description']
-                                    .toString()),
+                                Text(items[index]['volumeInfo']['title']),
+                                Text(items[index]['volumeInfo']['description'].toString()),
                               ]),
                             ),
                           ),

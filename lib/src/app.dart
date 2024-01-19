@@ -12,11 +12,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'workout trAIner',
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      // ),
+      theme: ThemeData(
+        brightness: Brightness.dark
+      ),
       home: MyHomePage(title: 'workout trAIner'),
     );
   }
@@ -84,7 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
         type: BottomNavigationBarType.fixed,
         selectedFontSize: 12,
-        selectedIconTheme: const IconThemeData(size: 32),
+        selectedLabelStyle: const TextStyle(color: Colors.blue),
+        selectedIconTheme: const IconThemeData(size: 32, color: Colors.blue),
         unselectedIconTheme: const IconThemeData(size: 32),
         showSelectedLabels: true, // 選択されたメニューのラベルの表示設定
         showUnselectedLabels: true, // 選択されてないメニューのラベルの表示設定
