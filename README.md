@@ -1,0 +1,2 @@
+# workout_trAIner_frontend
+workout trAInerのフロント開発用のリポジトリ
