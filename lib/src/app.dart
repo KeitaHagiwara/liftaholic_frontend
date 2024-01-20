@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // import 'sample.dart';
 import 'bottom_menu/account.dart';
@@ -13,11 +14,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'workout trAIner',
-      theme: ThemeData(
-        brightness: Brightness.dark
-      ),
-      home: MyHomePage(title: 'workout trAIner'),
+      title: 'LIFTAHOLIC',
+      theme: ThemeData(brightness: Brightness.dark),
+      home: MyHomePage(title: 'LIFTAHOLIC'),
     );
   }
 }
@@ -52,7 +51,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('workout trAIner'),
+        // title: Text('LIFTAHOLIC', style: GoogleFonts.blackOpsOne()),
+        // title: Text('LIFTAHOLIC', style: GoogleFonts.goblinOne()),
+        // title: Text('LIFTAHOLIC', style: GoogleFonts.zillaSlabHighlight()),
+        title: Text('LIFTAHOLIC', style: GoogleFonts.bungeeSpice()),
         // actions: [
         //   IconButton(
         //     icon: Icon(Icons.shopping_bag),
