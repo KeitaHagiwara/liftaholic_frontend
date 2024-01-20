@@ -1,4 +1,4 @@
-# workout_trAIner_frontend
+# liftaholic_frontend
 
 A new Flutter project.
 
