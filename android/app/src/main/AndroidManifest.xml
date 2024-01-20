@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.workout_trAIner_frontend">
+    package="com.example.liftaholic_frontend">
    <application
-        android:label="workout_trAIner_frontend"
+        android:label="liftaholic_frontend"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:workout_trAIner_frontend/main.dart';
+import 'package:liftaholic_frontend/main.dart';
 
 import '../lib/src/app.dart';
 

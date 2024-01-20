@@ -1,4 +1,4 @@
-package com.example.workout_trAIner_frontend
+package com.example.liftaholic_frontend
 
 import io.flutter.embedding.android.FlutterActivity
 

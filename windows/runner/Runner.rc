@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "workout_trAIner_frontend" "\0"
+            VALUE "FileDescription", "liftaholic_frontend" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "workout_trAIner_frontend" "\0"
+            VALUE "InternalName", "liftaholic_frontend" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "workout_trAIner_frontend.exe" "\0"
-            VALUE "ProductName", "workout_trAIner_frontend" "\0"
+            VALUE "OriginalFilename", "liftaholic_frontend.exe" "\0"
+            VALUE "ProductName", "liftaholic_frontend" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
