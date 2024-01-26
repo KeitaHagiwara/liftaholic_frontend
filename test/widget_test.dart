@@ -8,9 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:liftaholic_frontend/main.dart';
 
-import '../lib/src/app.dart';
+import 'package:liftaholic_frontend/src/app.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
