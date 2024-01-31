@@ -9,8 +9,6 @@ import '../workout/add_training_menu.dart';
 class WorkoutScreen extends StatefulWidget {
   const WorkoutScreen({Key? key}) : super(key: key);
 
-  // final String title;
-
   @override
   State<WorkoutScreen> createState() => _WorkoutScreenState();
 }

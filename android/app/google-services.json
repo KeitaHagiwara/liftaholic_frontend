@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "575478419293",
+    "project_id": "liftaholic-b6eb8",
+    "storage_bucket": "liftaholic-b6eb8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:575478419293:android:d46efdd12a4ebfe75fe2b4",
+        "android_client_info": {
+          "package_name": "com.example.liftaholic_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPH4dOKvqvStzOrJYM-Qm_j4YfDmqhlQ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

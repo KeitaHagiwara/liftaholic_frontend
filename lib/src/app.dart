@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // import 'sample.dart';
 import 'bottom_menu/account.dart';
@@ -7,6 +9,7 @@ import 'bottom_menu/workout.dart';
 import 'bottom_menu/home.dart';
 import 'bottom_menu/notification.dart';
 import 'bottom_menu/shopping.dart';
+import 'login.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -16,7 +19,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'LIFTAHOLIC',
       theme: ThemeData(brightness: Brightness.dark),
-      home: MyHomePage(title: 'LIFTAHOLIC'),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox();
+          }
+          if (snapshot.hasData) {
+            return MyHomePage(title: 'LIFTAHOLIC');
+          }
+          return LoginScreen();
+        },
+      ),
     );
   }
 }
@@ -35,11 +49,12 @@ class _MyHomePageState extends State<MyHomePage> {
     HomeScreen(),
     WorkoutScreen(),
     NotificationScreen(),
-    ShoppingScreen(),
+    // ShoppingScreen(),
     AccountScreen()
   ];
 
   int _selectedIndex = 0;
+  // bool isLogin = true;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -80,8 +95,8 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: Icon(Icons.fitness_center), label: 'ワークアウト'),
           BottomNavigationBarItem(
               icon: Icon(Icons.notifications), label: 'お知らせ'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart), label: 'ショッピング'),
+          // BottomNavigationBarItem(
+          //     icon: Icon(Icons.shopping_cart), label: 'ショッピング'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'マイページ'),
         ],
         type: BottomNavigationBarType.fixed,

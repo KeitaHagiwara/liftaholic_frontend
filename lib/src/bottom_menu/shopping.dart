@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 class ShoppingScreen extends StatefulWidget {
   const ShoppingScreen({Key? key}) : super(key: key);
 
-  // final String title;
-
   @override
   State<ShoppingScreen> createState() => _ShoppingScreenState();
 }
@@ -26,7 +24,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     var response = await http.get(Uri.https(
         'www.googleapis.com',
         '/books/v1/volumes',
-        {'q': '{Flutter}', 'maxResults': '30', 'langRestrict': 'ja'}));
+        {'q': '{Flutter}', 'maxResults': '30', 'langRestrict': 'ja'})).timeout(Duration(seconds: 10));
 
     var jsonResponse = jsonDecode(response.body);
 

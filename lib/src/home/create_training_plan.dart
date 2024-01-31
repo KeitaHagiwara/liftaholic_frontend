@@ -99,29 +99,29 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                 onPressed: () {
                   // null & 空白チェック
                   if (_createPlanDict['training_title'] == null ||
-                      _createPlanDict['training_title'] == '') {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text("入力必須"),
-                          content: Text('プランタイトルを入力してください。'),
-                          actions: [
-                            TextButton(
-                              child: Text(
-                                "OK",
-                                style: TextStyle(fontWeight: FontWeight.bold)
-                                    .copyWith(
-                                        color: Colors.white70, fontSize: 18.0),
+                    _createPlanDict['training_title'] == '') {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text("入力必須"),
+                            content: Text('プランタイトルを入力してください。'),
+                            actions: [
+                              TextButton(
+                                child: Text(
+                                  "OK",
+                                  style: TextStyle(fontWeight: FontWeight.bold)
+                                      .copyWith(
+                                          color: Colors.white70, fontSize: 18.0),
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
                               ),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                            ],
+                          );
+                        },
+                      );
                     // チェックOKだった場合
                   } else {
                     // training_countに0を追加する
