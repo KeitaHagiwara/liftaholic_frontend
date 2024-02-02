@@ -49,7 +49,7 @@ class _AccountScreenState extends State<AccountScreen> {
           currentAccountPicture: CircleAvatar(
               foregroundImage: AssetImage("assets/images/test_user.jpeg")),
           decoration: BoxDecoration(
-            color: Colors.blue,
+            color: Colors.transparent,
           ),
         ),
         ElevatedButton(

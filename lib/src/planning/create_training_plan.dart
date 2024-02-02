@@ -1,6 +1,10 @@
-// import 'dart:convert';
+import 'dart:async';
+import 'dart:convert';
 
 // import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 class CreateTrainingPlanScreen extends StatefulWidget {
@@ -12,11 +16,54 @@ class CreateTrainingPlanScreen extends StatefulWidget {
 }
 
 class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
+  // ********************
+  // イニシャライザ設定
+  // ********************
+  String? uid = '';
+
   bool _loading = false;
 
   // 入力されたテキストをデータとして持つ
   int _training_count = 0;
   Map<String, String> _createPlanDict = {};
+
+  // ********************
+  // サーバーアクセス処理
+  // ********************
+  Future<void> _createTrainingPlan(_createPlanDict) async {
+    // スピナー表示
+    setState(() {
+      _loading = true;
+    });
+
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" +
+        dotenv.get('API_HOST') +
+        ":" +
+        dotenv.get('API_PORT') +
+        "/api/training_plan/create_training_plan");
+
+    Map<String, String> headers = {'content-type': 'application/json'};
+    String body = json.encode({
+      'user_id': FirebaseAuth.instance.currentUser?.uid,
+      'training_title': _createPlanDict['training_title'],
+      'training_description': _createPlanDict['training_description'],
+    });
+    print(body);
+
+    //リクエストを投げる
+    try {
+      http.Response response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      print(jsonResponse);
+    } catch (e) {
+      print(e);
+    }
+  }
 
   // データを元に表示するWidget
   @override
@@ -99,33 +146,36 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                 onPressed: () {
                   // null & 空白チェック
                   if (_createPlanDict['training_title'] == null ||
-                    _createPlanDict['training_title'] == '') {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text("入力必須"),
-                            content: Text('プランタイトルを入力してください。'),
-                            actions: [
-                              TextButton(
-                                child: Text(
-                                  "OK",
-                                  style: TextStyle(fontWeight: FontWeight.bold)
-                                      .copyWith(
-                                          color: Colors.white70, fontSize: 18.0),
-                                ),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
+                      _createPlanDict['training_title'] == '') {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("入力必須"),
+                          content: Text('プランタイトルを入力してください。'),
+                          actions: [
+                            TextButton(
+                              child: Text(
+                                "OK",
+                                style: TextStyle(fontWeight: FontWeight.bold)
+                                    .copyWith(
+                                        color: Colors.white70, fontSize: 18.0),
                               ),
-                            ],
-                          );
-                        },
-                      );
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                     // チェックOKだった場合
                   } else {
                     // training_countに0を追加する
-                    _createPlanDict['training_count'] = _training_count.toString();
+                    _createPlanDict['training_count'] =
+                        _training_count.toString();
+                    // DBにトレーニングプランを登録する
+                    // _createTrainingPlan(_createPlanDict);
                     // "pop"で前の画面に戻る
                     // "pop"の引数から前の画面にデータを渡す
                     Navigator.of(context).pop(_createPlanDict);

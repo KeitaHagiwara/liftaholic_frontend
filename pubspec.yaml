@@ -22,6 +22,8 @@ dependencies:
   flutter_dotenv: ^5.1.0
   firebase_core: ^2.24.2
   firebase_auth: ^4.16.0
+  table_calendar: ^3.0.9
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
@@ -33,4 +35,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/google_fonts/
     - .env
+  fonts:
+    - family: Honk
+      fonts:
+        - asset: assets/google_fonts/Honk/static/Honk-Regular.ttf

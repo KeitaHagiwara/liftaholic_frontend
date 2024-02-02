@@ -6,7 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 // import 'sample.dart';
 import 'bottom_menu/account.dart';
 import 'bottom_menu/workout.dart';
-import 'bottom_menu/home.dart';
+import 'bottom_menu/planning.dart';
 import 'bottom_menu/notification.dart';
 import 'bottom_menu/shopping.dart';
 import 'login.dart';
@@ -46,7 +46,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   static const _screens = [
-    HomeScreen(),
+    PlanningScreen(),
     WorkoutScreen(),
     NotificationScreen(),
     // ShoppingScreen(),
@@ -69,7 +69,11 @@ class _MyHomePageState extends State<MyHomePage> {
         // title: Text('LIFTAHOLIC', style: GoogleFonts.blackOpsOne()),
         // title: Text('LIFTAHOLIC', style: GoogleFonts.goblinOne()),
         // title: Text('LIFTAHOLIC', style: GoogleFonts.zillaSlabHighlight()),
-        title: Text('LIFTAHOLIC', style: GoogleFonts.bungeeSpice()),
+        // title: Text('LIFTAHOLIC', style: GoogleFonts.bungeeSpice()),
+        title: Text(
+          'LIFTAHOLIC',
+          style: TextStyle(fontFamily: 'Honk', fontSize: 36, color: Colors.blue),
+        ),
         // actions: [
         //   IconButton(
         //     icon: Icon(Icons.shopping_bag),
@@ -90,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
+          BottomNavigationBarItem(icon: Icon(Icons.event_note), label: 'プランニング'),
           BottomNavigationBarItem(
               icon: Icon(Icons.fitness_center), label: 'ワークアウト'),
           BottomNavigationBarItem(

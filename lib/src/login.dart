@@ -99,12 +99,15 @@
 // }
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app.dart';
 
@@ -117,6 +120,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String error_message = "";
+  List items = [];
 
   Duration get loginTime => const Duration(milliseconds: 2250);
 
@@ -129,9 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: data.name,
         password: data.password,
       );
-      // Succeeded to login
-      // final User user = userCredential.user!;
-      // print(user.email);
+
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'invalid-email':
@@ -174,6 +176,30 @@ class _LoginScreenState extends State<LoginScreen> {
         email: data.name!,
         password: data.password!,
       );
+
+      // DBにもログイン情報を登録する
+      await dotenv.load(fileName: '.env');
+      //リクエスト先のurl
+      Uri url = Uri.parse("http://" +
+          dotenv.get('API_HOST') +
+          ":" +
+          dotenv.get('API_PORT') +
+          "/api/mypage/create_user");
+      Map<String, String> headers = {'content-type': 'application/json'};
+      String body = json.encode({'user_id': auth.currentUser?.uid});
+
+      //リクエストを投げる
+      http.Response response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(Duration(seconds: 10));
+
+      //リクエスト結果をコンソール出力
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      if (jsonResponse['result']['status_code'] != 200){
+        print(jsonResponse);
+        return jsonResponse['result']['status_msg'];
+      }
+
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'weak-password':
