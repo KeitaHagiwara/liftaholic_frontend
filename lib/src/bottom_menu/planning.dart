@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 
 // import 'package:flutter/widgets.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../planning/create_training_plan.dart';
+import '../firebase/user_info.dart';
 
 class PlanningScreen extends StatefulWidget {
   const PlanningScreen({Key? key}) : super(key: key);
@@ -25,35 +25,14 @@ class _PlanningScreenState extends State<PlanningScreen> {
   // ********************
   // イニシャライザ設定
   // ********************
-  String? uid = '';
+  static const plan_not_registered = 'プランの説明はありません';
 
-  bool _loading = false;
+  String? uid = ''; // ユーザーID
+  String? username = ''; // 表示名
 
-  List result = [];
+  bool _loading = false; // スピナーの状態
 
-  // List<String> trainingPlanTitle = ["plan1", "plan2", "plan3", ""];
-  // List<String> trainingPlanDescription = [
-  //   "Bench press",
-  //   "Dead lift",
-  //   "Squad",
-  //   ""
-  // ];
-  // List<int> trainingPlanCount = [3, 4, 5, 0];
-
-  // List _trainingPlanList = [
-  //   {
-  //     "plan_title": "Plan1",
-  //     "plan_description": "Bench Press",
-  //     "plan_counts": 3
-  //   },
-  //   {"plan_title": "Plan2", "plan_description": "Dead lift", "plan_counts": 4},
-  //   {"plan_title": "Plan3", "plan_description": "Squad", "plan_counts": 5},
-  //   {"plan_title": "", "plan_description": "", "plan_counts": 0},
-  // ];
-  List _registeredPlanList = [];
-
-  // Todoリストのデータ
-  Map<String, String> createPlanDict = {};
+  List _registeredPlanList = []; // 登録済みのトレーニングプランのデータを格納するリスト
 
   DateTime _focusedDay = DateTime.now(); // 現在日
   CalendarFormat _calendarFormat = CalendarFormat.month; // 月フォーマット
@@ -61,24 +40,64 @@ class _PlanningScreenState extends State<PlanningScreen> {
   List<String> _selectedEvents = [];
 
   //Map形式で保持　keyが日付　値が文字列
-  final calendarMap = {
-    DateTime.utc(2024, 2, 20): ['firstEvent', 'secondEvent'],
-    DateTime.utc(2024, 2, 5): ['thirdEvent', 'fourthEvent'],
-  };
+  final _calendarMap = {};
+  final _calendarEvents = {};
 
-  final calendarEvents = {
-    DateTime.utc(2024, 2, 20): ['firstEvent', 'secondEvent'],
-    DateTime.utc(2024, 2, 5): ['thirdEvent', 'fourthEvent']
-  };
+  // final calendarMap = {
+  //   DateTime.utc(2024, 2, 20): ['firstEvent', 'secondEvent'],
+  //   DateTime.utc(2024, 2, 5): ['thirdEvent', 'fourthEvent'],
+  // };
+
+  // final calendarEvents = {
+  //   DateTime.utc(2024, 2, 20): ['firstEvent', 'secondEvent'],
+  //   DateTime.utc(2024, 2, 5): ['thirdEvent', 'fourthEvent']
+  // };
 
   // ********************
   // サーバーアクセス処理
   // ********************
-  // ユーザー情報を取得する
-  Future<void> reload() async {
-    final instance = FirebaseAuth.instance;
-    final User? user = instance.currentUser;
-    await user!.reload();
+  // ユーザー名を強制的に設定させる
+  Future<void> UpdateUserNameDialog(BuildContext context) async {
+    //処理が重い(?)からか、非同期処理にする
+    return showDialog(
+        context: context,
+        barrierDismissible: false, // ボタンが押されるまでダイアログは閉じない
+        builder: (context) {
+          return AlertDialog(
+            title: Text('ユーザー名を設定しましょう🎉', style: TextStyle(fontSize: 18.0)),
+            content: TextField(
+              autofocus: true,
+              keyboardType: TextInputType.name,
+              decoration: InputDecoration(
+                hintText: 'ここに入力',
+                labelText: 'ユーザー名',
+                labelStyle: TextStyle(color: Colors.white),
+                fillColor: Colors.white,
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.blue, width: 2.0),
+                ),
+              ),
+              onChanged: (String value) {
+                setState(() {
+                  username = value;
+                });
+              },
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK', style: TextStyle(color: Colors.blue)),
+                onPressed: () {
+                  // FirebaseのdisplayNameに登録する処理
+                  if (username != null && username != '') {
+                    updateDisplayName(username!);
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ],
+          );
+        });
   }
 
   Future<void> getTrainingPlans(uid) async {
@@ -106,13 +125,18 @@ class _PlanningScreenState extends State<PlanningScreen> {
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       if (!mounted) return;
       setState(() {
-        result = jsonResponse["training_plans"];
-        for (int i = 0; i < result.length; i++) {
+        // --------
+        // トレーニングプランのデータを作成
+        // --------
+        List result_tp = jsonResponse['training_plans'];
+        for (int i = 0; i < result_tp.length; i++) {
           _registeredPlanList.add(
             {
-              'plan_title': result[i]['training_title'],
-              'plan_description': result[i]['training_description'],
-              'plan_counts': result[i]['training_counts'].toString(),
+              'plan_title': result_tp[i]['training_title'],
+              'plan_description': result_tp[i]['training_description'] == ''
+                  ? plan_not_registered
+                  : result_tp[i]['training_description'],
+              'plan_counts': result_tp[i]['training_counts'].toString(),
             },
           );
         }
@@ -120,6 +144,18 @@ class _PlanningScreenState extends State<PlanningScreen> {
         _registeredPlanList.add(
           {"plan_title": "", "plan_description": "", "plan_counts": 0},
         );
+
+        // --------
+        // ユーザーカレンダーのデータを作成
+        // --------
+        List result_ce = jsonResponse['calendar_events'];
+        for (int i = 0; i < result_ce.length; i++) {
+          var key = DateTime.utc(result_ce[i]['ce_year'],
+              result_ce[i]['ce_month'], result_ce[i]['ce_day']);
+          final event_list = result_ce[i]['event_list'].cast<String>();
+          _calendarMap[key] = event_list;
+          _calendarEvents[key] = event_list;
+        }
 
         // スピナー非表示
         _loading = false;
@@ -137,7 +173,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
       'plan_title': newListText['training_title'],
       'plan_description': (newListText['training_description'] == null ||
               newListText['training_description'] == "")
-          ? 'プランの説明はありません'
+          ? plan_not_registered
           : newListText['training_description'],
       'plan_counts': newListText['training_count']
     };
@@ -153,6 +189,13 @@ class _PlanningScreenState extends State<PlanningScreen> {
 
     reload();
     uid = FirebaseAuth.instance.currentUser?.uid;
+    username = FirebaseAuth.instance.currentUser?.displayName;
+
+    if (username == null) {
+      Future.delayed(Duration.zero, () {
+        UpdateUserNameDialog(context);
+      });
+    }
     getTrainingPlans(uid);
   }
 
@@ -303,7 +346,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
                         focusedDay: _focusedDay,
                         eventLoader: (date) {
                           // イベントドット処理
-                          return calendarMap[date] ?? [];
+                          return _calendarMap[date] ?? [];
                         },
                         calendarBuilders: CalendarBuilders(
                             markerBuilder: (context, date, events) {
@@ -368,7 +411,8 @@ class _PlanningScreenState extends State<PlanningScreen> {
                           setState(() {
                             _selectedDay = selectedDay;
                             _focusedDay = focusedDay;
-                            _selectedEvents = calendarEvents[selectedDay] ?? [];
+                            _selectedEvents =
+                                _calendarEvents[selectedDay] ?? [];
                           });
                         }),
                   ),
@@ -414,7 +458,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
       //         trainingPlanDescription.add(
       //             newListText['training_description'] != null
       //                 ? newListText['training_description']
-      //                 : 'プランの説明はありません');
+      //                 : plan_not_registered);
       //         trainingPlanCount.add(int.parse(newListText['training_count']));
       //       });
       //     }

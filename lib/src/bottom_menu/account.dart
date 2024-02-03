@@ -13,8 +13,9 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   // イニシャライザ設定
-  String? email = '';
   String? uid = '';
+  String? email = '';
+  String? username = '';
 
   Future<void> reload() async {
     final instance = FirebaseAuth.instance;
@@ -29,6 +30,7 @@ class _AccountScreenState extends State<AccountScreen> {
     reload();
     uid = FirebaseAuth.instance.currentUser?.uid;
     email = FirebaseAuth.instance.currentUser?.email;
+    username = FirebaseAuth.instance.currentUser?.displayName;
   }
 
   @override
@@ -41,7 +43,7 @@ class _AccountScreenState extends State<AccountScreen> {
           child: ListView(children: [
         UserAccountsDrawerHeader(
           accountName: Text(
-            uid!,
+            username!,
             style: TextStyle(fontWeight: FontWeight.bold)
                 .copyWith(color: Colors.white, fontSize: 18.0),
           ),

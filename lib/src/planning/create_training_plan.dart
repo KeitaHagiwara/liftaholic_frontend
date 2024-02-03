@@ -48,11 +48,10 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
     String body = json.encode({
       'user_id': FirebaseAuth.instance.currentUser?.uid,
       'training_title': _createPlanDict['training_title'],
-      'training_description': _createPlanDict['training_description'],
+      'training_description': _createPlanDict['training_description'] == null ? '' : _createPlanDict['training_description']
     });
-    print(body);
 
-    //リクエストを投げる
+    // POSTリクエストを投げる
     try {
       http.Response response = await http
           .post(url, headers: headers, body: body)
@@ -102,8 +101,6 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                 // データが変更したことを知らせる（画面を更新する）
                 setState(() {
                   _createPlanDict['training_title'] = value;
-                  // データを変更
-                  // _training_title = value;
                 });
               },
             ),
@@ -132,8 +129,6 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                 // データが変更したことを知らせる（画面を更新する）
                 setState(() {
                   _createPlanDict['training_description'] = value;
-                  // データを変更
-                  // _training_description = value;
                 });
               },
             ),
@@ -175,7 +170,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                     _createPlanDict['training_count'] =
                         _training_count.toString();
                     // DBにトレーニングプランを登録する
-                    // _createTrainingPlan(_createPlanDict);
+                    _createTrainingPlan(_createPlanDict);
                     // "pop"で前の画面に戻る
                     // "pop"の引数から前の画面にデータを渡す
                     Navigator.of(context).pop(_createPlanDict);
