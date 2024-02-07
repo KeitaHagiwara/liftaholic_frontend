@@ -16,6 +16,7 @@ class _AccountScreenState extends State<AccountScreen> {
   String? uid = '';
   String? email = '';
   String? username = '';
+  String? photoURL = '';
 
   Future<void> reload() async {
     final instance = FirebaseAuth.instance;
@@ -31,6 +32,7 @@ class _AccountScreenState extends State<AccountScreen> {
     uid = FirebaseAuth.instance.currentUser?.uid;
     email = FirebaseAuth.instance.currentUser?.email;
     username = FirebaseAuth.instance.currentUser?.displayName;
+    photoURL = FirebaseAuth.instance.currentUser?.photoURL;
   }
 
   @override
@@ -49,7 +51,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           accountEmail: Text(email!),
           currentAccountPicture: CircleAvatar(
-              foregroundImage: AssetImage("assets/images/test_user.jpeg")),
+              foregroundImage: AssetImage("assets/images/default_icon.png")),
           decoration: BoxDecoration(
             color: Colors.transparent,
           ),

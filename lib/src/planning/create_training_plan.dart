@@ -21,6 +21,8 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
   // ********************
   String? uid = '';
 
+  late int plan_id;
+
   bool _loading = false;
 
   // 入力されたテキストをデータとして持つ
@@ -30,12 +32,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
   // ********************
   // サーバーアクセス処理
   // ********************
-  Future<void> _createTrainingPlan(_createPlanDict) async {
-    // スピナー表示
-    setState(() {
-      _loading = true;
-    });
-
+  Future<int> _createTrainingPlan(_createPlanDict) async {
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
     Uri url = Uri.parse("http://" +
@@ -48,20 +45,19 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
     String body = json.encode({
       'user_id': FirebaseAuth.instance.currentUser?.uid,
       'training_title': _createPlanDict['training_title'],
-      'training_description': _createPlanDict['training_description'] == null ? '' : _createPlanDict['training_description']
+      'training_description': _createPlanDict['training_description'] == null
+          ? ''
+          : _createPlanDict['training_description']
     });
 
     // POSTリクエストを投げる
-    try {
-      http.Response response = await http
-          .post(url, headers: headers, body: body)
-          .timeout(Duration(seconds: 10));
+    http.Response response = await http
+        .post(url, headers: headers, body: body)
+        .timeout(Duration(seconds: 10));
 
-      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      print(jsonResponse);
-    } catch (e) {
-      print(e);
-    }
+    var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+    // print(jsonResponse);
+    return Future<int>.value(jsonResponse['result']['id']);
   }
 
   // データを元に表示するWidget
@@ -138,7 +134,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
               width: double.infinity,
               // リスト追加ボタン
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   // null & 空白チェック
                   if (_createPlanDict['training_title'] == null ||
                       _createPlanDict['training_title'] == '') {
@@ -170,7 +166,8 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                     _createPlanDict['training_count'] =
                         _training_count.toString();
                     // DBにトレーニングプランを登録する
-                    _createTrainingPlan(_createPlanDict);
+                    plan_id = await _createTrainingPlan(_createPlanDict);
+                    _createPlanDict['plan_id'] = plan_id.toString();
                     // "pop"で前の画面に戻る
                     // "pop"の引数から前の画面にデータを渡す
                     Navigator.of(context).pop(_createPlanDict);

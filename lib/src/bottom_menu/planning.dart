@@ -10,8 +10,11 @@ import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 
 import '../planning/create_training_plan.dart';
+import '../planning/edit_training_plan.dart';
+import '../planning/show_calendar_modal.dart';
 import '../firebase/user_info.dart';
 
 class PlanningScreen extends StatefulWidget {
@@ -132,6 +135,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
         for (int i = 0; i < result_tp.length; i++) {
           _registeredPlanList.add(
             {
+              'plan_id': result_tp[i]['training_plan_id'],
               'plan_title': result_tp[i]['training_title'],
               'plan_description': result_tp[i]['training_description'] == ''
                   ? plan_not_registered
@@ -170,6 +174,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
   void createNewPlan(newListText) {
     // リスト追加
     final _newPlan = {
+      'plan_id': newListText['plan_id'],
       'plan_title': newListText['training_title'],
       'plan_description': (newListText['training_description'] == null ||
               newListText['training_description'] == "")
@@ -281,8 +286,18 @@ class _PlanningScreenState extends State<PlanningScreen> {
                                         child: Icon(Icons.add_circle,
                                             color: Colors.blue)))
                                 : InkWell(
-                                    onTap: () {
-                                      print('test');
+                                    onTap: () async {
+                                      // "push"で新規画面に遷移
+                                      // リスト追加画面から渡される値を受け取る
+                                      print(_registeredPlanList[index]
+                                          ['plan_id']);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                EditTrainingPlanScreen(
+                                                    training_plan_id: _registeredPlanList[index]['plan_id'])),
+                                      );
                                     },
                                     child: Container(
                                       width: 180,
@@ -408,6 +423,13 @@ class _PlanningScreenState extends State<PlanningScreen> {
                         },
                         // 日付が選択されたときの処理
                         onDaySelected: (selectedDay, focusedDay) {
+                          // 選択された日付が2回タップされた場合にモーダルを表示する
+                          if (_selectedDay == selectedDay) {
+                            print(_selectedEvents);
+                            showCalendarModal(
+                                context, uid, selectedDay, ['test1', 'test2']);
+                          }
+
                           setState(() {
                             _selectedDay = selectedDay;
                             _focusedDay = focusedDay;

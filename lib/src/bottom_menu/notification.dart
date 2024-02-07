@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lottie/lottie.dart';
+
+import '../firebase/user_info.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -16,7 +20,9 @@ class _NortificationScreenState extends State<NotificationScreen>
   // お知らせページのイニシャライザ設定
   bool _loading = false;
 
-  List items = [];
+  String? uid = ''; // ユーザーID
+
+  Map results = {'あなた宛': [], 'ニュース': []};
 
   final List<Tab> tabs = <Tab>[
     Tab(
@@ -28,7 +34,7 @@ class _NortificationScreenState extends State<NotificationScreen>
   ];
   late TabController _tabController;
 
-  Future<void> getAllNotifications() async {
+  Future<void> getAllNotifications(uid) async {
     // スピナー表示
     setState(() {
       _loading = true;
@@ -40,7 +46,8 @@ class _NortificationScreenState extends State<NotificationScreen>
         dotenv.get('API_HOST') +
         ":" +
         dotenv.get('API_PORT') +
-        "/api/notification");
+        "/api/notification/" +
+        uid);
 
     try {
       //リクエストを投げる
@@ -52,8 +59,7 @@ class _NortificationScreenState extends State<NotificationScreen>
 
       if (!mounted) return;
       setState(() {
-        items = jsonResponse["result"];
-        print(items);
+        results = jsonResponse["result"];
 
         // スピナー非表示
         _loading = false;
@@ -69,8 +75,10 @@ class _NortificationScreenState extends State<NotificationScreen>
   void initState() {
     super.initState();
 
+    reload();
+    uid = FirebaseAuth.instance.currentUser?.uid;
     _tabController = TabController(length: tabs.length, vsync: this);
-    getAllNotifications();
+    getAllNotifications(uid);
   }
 
   @override
@@ -112,24 +120,15 @@ class _NortificationScreenState extends State<NotificationScreen>
   }
 
   Widget _createTab(Tab tab) {
-    // return Center(
-    //   child: Text(
-    //     "10 min Rest Time",
-    //     style: TextStyle(fontSize: 24.0),
-    //   ),
-    // );
     return ListView.builder(
-        itemCount: items.length,
+        itemCount: results[tab.text].length,
         itemBuilder: (BuildContext context, int index) {
           return Card(
             child: Column(
               children: <Widget>[
                 ListTile(
-                  // leading: Image.network(
-                  //   items[index]['volumeInfo']['imageLinks']['thumbnail'],
-                  // ),
-                  title: Text(items[index]['title']),
-                  subtitle: Text(items[index]['created_at']),
+                  title: Text(results[tab.text][index]['title']),
+                  subtitle: Text(results[tab.text][index]['created_at']),
                   onTap: () {
                     showModalBottomSheet(
                       isScrollControlled: true,
@@ -145,26 +144,54 @@ class _NortificationScreenState extends State<NotificationScreen>
                                 SizedBox(
                                   width: double.infinity,
                                   child: Text(
-                                    items[index]['title'],
+                                    results[tab.text][index]['title'],
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontWeight: FontWeight.bold)
-                                        .copyWith(
-                                            color: Colors.white70,
-                                            fontSize: 18.0),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)
+                                            .copyWith(
+                                                color: Colors.white70,
+                                                fontSize: 18.0),
                                   ),
                                 ),
                                 SizedBox(
                                   width: double.infinity,
-                                  child: Text(items[index]['created_at'],
-                                  textAlign: TextAlign.right),
+                                  child: Text(
+                                      results[tab.text][index]['created_at'],
+                                      textAlign: TextAlign.right),
                                 ),
+                                // default: 'https://lottie.host/13f1ca31-c177-4ebc-a64a-28f82a15c786/BmrjCFDPXQ.json',
+                                // custom1 : 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
+                                if (results[tab.text][index]['animation_width'] != null) ...[
+                                  Lottie.network(
+                                    results[tab.text][index]['animation_link'],
+                                    width: double.parse(results[tab.text][index]['animation_width']),
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Padding(
+                                        padding: EdgeInsets.all(0.0),
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    },
+                                  ),
+                                ] else ...[
+                                  Lottie.network(
+                                    results[tab.text][index]['animation_link'],
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Padding(
+                                        padding: EdgeInsets.all(0.0),
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    },
+                                  ),
+                                ],
+
                                 SizedBox(
-                                  width: double.infinity,
-                                  child: Container(
-                                    margin: EdgeInsets.fromLTRB(0, 40.0, 0, 40.0),
-                                    child: Text(items[index]['detail']),
-                                  )
-                                ),
+                                    width: double.infinity,
+                                    child: Container(
+                                      margin:
+                                          EdgeInsets.fromLTRB(0, 20.0, 0, 40.0),
+                                      child: Text(
+                                          results[tab.text][index]['detail']),
+                                    )),
                                 TextButton(
                                   style: TextButton.styleFrom(
                                       backgroundColor: Colors.blue),
