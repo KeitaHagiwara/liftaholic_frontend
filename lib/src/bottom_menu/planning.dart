@@ -116,7 +116,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
         dotenv.get('API_HOST') +
         ":" +
         dotenv.get('API_PORT') +
-        "/api/training_plan/" +
+        "/api/training_plan/get_user_training_plans/" +
         uid);
 
     try {

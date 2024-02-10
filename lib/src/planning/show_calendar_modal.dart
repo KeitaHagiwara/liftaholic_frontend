@@ -31,7 +31,7 @@ void showCalendarModal(context, uid, selectedDay, selectedEvents) {
                 alignment: Alignment.centerRight,
                 // width: double.infinity,
                 child: TextButton(
-                  style: TextButton.styleFrom(backgroundColor: Colors.red[300]),
+                  style: TextButton.styleFrom(backgroundColor: Colors.blue),
                   onPressed: () {
                     Navigator.pop(context); // Close the sheet.
                   },
@@ -61,11 +61,10 @@ void showCalendarModal(context, uid, selectedDay, selectedEvents) {
                     // ),
                   )),
               TextButton(
-                style: TextButton.styleFrom(backgroundColor: Colors.blue),
+                style: TextButton.styleFrom(backgroundColor: Colors.grey),
                 onPressed: () {
                   Navigator.pop(context); // Close the sheet.
                 },
-                // child: Text("閉じる", style: TextStyle(color: Theme.of(context).colorScheme.primary)), // Add the button text.
                 child: Text("閉じる",
                     style:
                         TextStyle(color: Colors.white)), // Add the button text.

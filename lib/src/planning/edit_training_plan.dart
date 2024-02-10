@@ -3,11 +3,14 @@ import 'dart:convert';
 
 // import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+
+import '../planning/select_training_modal.dart';
 
 class EditTrainingPlanScreen extends StatefulWidget {
   const EditTrainingPlanScreen({Key? key, required this.training_plan_id})
@@ -22,7 +25,9 @@ class EditTrainingPlanScreen extends StatefulWidget {
 
 class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // ********************
+  //
   // イニシャライザ設定
+  //
   // ********************
   final itemController = TextEditingController();
 
@@ -32,21 +37,99 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
 
   bool _loading = false;
 
-  // 入力されたテキストをデータとして持つ
-  int _training_count = 0;
+  // トレーニングプランを作成するときに使用する辞書
   Map<String, String> _createPlanDict = {};
 
-  final List results = [];
+  List trainings_registered = [];
 
-  // final List results = [
+  // List trainings_registered = [
   //   {'training_name': 'ベンチプレス', 'description': 'bench'},
   //   {'training_name': 'プッシュアップ', 'description': 'push-up'},
   //   {'training_name': 'インクラインダンベルプレス', 'description': 'press'}
   // ];
 
+  // トレーニングメニューを入れる辞書
+  Map<String, dynamic> training_menu = {};
+
   // ********************
+  //
   // サーバーアクセス処理
+  //
   // ********************
+  // ----------------------------
+  // 全トレーニングメニューを取得する
+  // ----------------------------
+  Future<void> getAllTrainingMenu() async {
+    await dotenv.load(fileName: '.env');
+
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" +
+        dotenv.get('API_HOST') +
+        ":" +
+        dotenv.get('API_PORT') +
+        "/api/training_plan/get_all_training_menu");
+
+    try {
+      var response = await http.get(url).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      // print(jsonResponse['training_menu']);
+      if (!mounted) return;
+      setState(() {
+        // --------
+        // トレーニングメニューのデータを作成
+        // --------
+        training_menu = jsonResponse['training_menu'];
+
+        // スピナー非表示
+        _loading = false;
+      });
+    } catch (e) {
+      //リクエストに失敗した場合は"error"と表示
+      print(e);
+      debugPrint('error');
+    }
+  }
+
+  // ----------------------------
+  // トレーニングプランに登録済みのトレーニングを取得する
+  // ----------------------------
+  Future<void> getRegisteredTrainings(training_plan_id) async {
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" +
+        dotenv.get('API_HOST') +
+        ":" +
+        dotenv.get('API_PORT') +
+        "/api/training_plan/get_registered_trainings/" +
+        training_plan_id.toString());
+
+    try {
+      var response = await http.get(url).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      // print(jsonResponse['training_menu']);
+      if (!mounted) return;
+      setState(() {
+        // --------
+        // トレーニングメニューのデータを作成
+        // --------
+        trainings_registered = jsonResponse['user_training_menu'];
+        print(trainings_registered);
+
+        // スピナー非表示
+        _loading = false;
+      });
+    } catch (e) {
+      //リクエストに失敗した場合は"error"と表示
+      print(e);
+      debugPrint('error');
+    }
+  }
+
+  // ----------------------------
+  // トレーニングプランを作成する
+  // ----------------------------
   Future<void> _createTrainingPlan(_createPlanDict) async {
     // スピナー表示
     setState(() {
@@ -83,7 +166,9 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
     }
   }
 
+  // ----------------------------
   // アイテムを追加するダイアログ
+  // ----------------------------
   void removeTraining(int index, String training_name) {
     showDialog(
       context: context,
@@ -112,9 +197,19 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
 
     // 受け取ったデータを状態を管理する変数に格納
     training_plan_id = widget.training_plan_id;
+
+    // トレーニングプランに登録済みのトレーニングメニューを取得する
+    getRegisteredTrainings(training_plan_id);
+
+    // 登録済みの全トレーニングメニューを取得する
+    getAllTrainingMenu();
   }
 
+  // ********************
+  //
   // データを元に表示するWidget
+  //
+  // ********************
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,26 +231,30 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
             const SizedBox(height: 8),
             Flexible(
               // height: 150,
-              child: results.length == 0
-              ? Text('トレーニングが未登録です。')
-              : ListView.builder(
-                  itemCount: results.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final training = results[index];
-                    return Slidable(
-                        endActionPane:
-                            ActionPane(motion: const BehindMotion(), children: [
-                          SlidableAction(
-                              backgroundColor: Colors.red,
-                              icon: Icons.delete,
-                              label: '削除',
-                              onPressed: (context) {
-                                removeTraining(
-                                    index, training['training_name']);
-                              })
-                        ]),
-                        child: buildTrainingListTile(training));
-                  }),
+              child: trainings_registered.length == 0
+                  ? Center(
+                      child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [Text('トレーニングが未登録です。')]))
+                  : ListView.builder(
+                      itemCount: trainings_registered.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final training = trainings_registered[index];
+                        return Slidable(
+                            endActionPane: ActionPane(
+                                motion: const BehindMotion(),
+                                children: [
+                                  SlidableAction(
+                                      backgroundColor: Colors.red,
+                                      icon: Icons.delete,
+                                      label: '削除',
+                                      onPressed: (context) {
+                                        removeTraining(
+                                            index, training['training_name']);
+                                      })
+                                ]),
+                            child: buildTrainingListTile(training));
+                      }),
             ),
             // トレーニング追加ボタン
             const SizedBox(height: 8),
@@ -169,7 +268,10 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue, // background
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  selectTrainingModal(
+                      context, uid, training_plan_id, training_menu);
+                },
               ),
             ),
             // トレーニングプラン削除ボタン
@@ -193,14 +295,17 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
     );
   }
 
+  // ********************
+  //
   // トレーニングリストタイル
+  //
+  // ********************
   Widget buildTrainingListTile(training) => Card(
           child: Column(children: <Widget>[
         ListTile(
           leading: CircleAvatar(
               foregroundImage: AssetImage("assets/images/chest.png")),
           title: Text(training['training_name']),
-          subtitle: Text(training['description']),
           onTap: () {
             showModalBottomSheet(
               isScrollControlled: true,

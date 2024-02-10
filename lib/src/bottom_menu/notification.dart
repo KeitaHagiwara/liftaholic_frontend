@@ -194,11 +194,10 @@ class _NortificationScreenState extends State<NotificationScreen>
                                     )),
                                 TextButton(
                                   style: TextButton.styleFrom(
-                                      backgroundColor: Colors.blue),
+                                      backgroundColor: Colors.grey),
                                   onPressed: () {
                                     Navigator.pop(context); // Close the sheet.
                                   },
-                                  // child: Text("閉じる", style: TextStyle(color: Theme.of(context).colorScheme.primary)), // Add the button text.
                                   child: Text("閉じる",
                                       style: TextStyle(
                                           color: Colors
