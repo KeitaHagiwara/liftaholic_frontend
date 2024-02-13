@@ -2,16 +2,19 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+
+import './training_contents_modal.dart';
 
 // ----------------------------
 // トレーニングプランにメニューを追加する
 // ----------------------------
 Future<void> _addTrainingMenu(training_plan_id, training_no) async {
-
   await dotenv.load(fileName: '.env');
   //リクエスト先のurl
   Uri url = Uri.parse("http://" +
@@ -116,22 +119,58 @@ void selectTrainingModal(context, uid, plan_id, trainings) {
                             i_c1 <
                                 trainings[List.from(trainings.keys)[i]].length;
                             i_c1++) ...{
-                          ListTile(
-                            title: Text(List.from(
-                                    List.from(trainings.values)[i].values)[i_c1]
-                                ['training_name']),
-                            trailing: Icon(
-                              Icons.add_circle,
-                              color: Colors.blue,
+                          Slidable(
+                            startActionPane: ActionPane(
+                                motion: const ScrollMotion(),
+                                children: [
+                                  SlidableAction(
+                                      backgroundColor: Colors.green,
+                                      icon: Icons.add,
+                                      label: '追加',
+                                      onPressed: (context) {
+                                        // トレーニングIDを取得する
+                                        var training_no = List.from(
+                                            List.from(trainings.values)[i]
+                                                .keys)[i_c1];
+
+                                        // プランにトレーニングメニューを追加する
+                                        _addTrainingMenu(plan_id, training_no);
+                                        // 追加済みのダイアログを表示する
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text("追加しました"),
+                                              content:
+                                                  Text(List.from(List.from(trainings.values)[i].values)[i_c1]['training_name'] + "をトレーニングプランに追加しました。"),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text("OK"),
+                                                  onPressed: () {
+                                                    print('OK');
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      })
+                                ]),
+                            // child: buildTrainingListTile(training)
+                            child: ListTile(
+                              title: Text(List.from(
+                                  List.from(trainings.values)[i]
+                                      .values)[i_c1]['training_name']),
+                              onTap: () {
+                                // トレーニングのコンテンツのモーダルを表示する
+                                showTrainingContentModal(
+                                    context,
+                                    List.from(List.from(trainings.values)[i]
+                                        .values)[i_c1]);
+                              },
                             ),
-                            onTap: () {
-                              // トレーニングIDを取得する
-                              var training_no = List.from(
-                                  List.from(trainings.values)[i].keys)[i_c1];
-                              // プランにトレーニングメニューを追加する
-                              _addTrainingMenu(plan_id, training_no);
-                            },
-                          ),
+                          )
                         }
                       ],
                     )

@@ -11,13 +11,14 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import '../planning/select_training_modal.dart';
+import '../planning/training_contents_modal.dart';
 
 class EditTrainingPlanScreen extends StatefulWidget {
   const EditTrainingPlanScreen({Key? key, required this.training_plan_id})
       : super(key: key);
 
   // 画面遷移元からのデータを受け取る変数
-  final int training_plan_id;
+  final String training_plan_id;
 
   @override
   _EditTrainingPlanScreenState createState() => _EditTrainingPlanScreenState();
@@ -31,7 +32,9 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // ********************
   final itemController = TextEditingController();
 
-  late int training_plan_id;
+  late String training_plan_id;
+  String training_plan_name = '';
+  String training_plan_description = '';
 
   String? uid = '';
 
@@ -59,7 +62,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // ----------------------------
   // 全トレーニングメニューを取得する
   // ----------------------------
-  Future<void> getAllTrainingMenu() async {
+  Future<void> _getAllTrainingMenu() async {
     await dotenv.load(fileName: '.env');
 
     //リクエスト先のurl
@@ -94,7 +97,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // ----------------------------
   // トレーニングプランに登録済みのトレーニングを取得する
   // ----------------------------
-  Future<void> getRegisteredTrainings(training_plan_id) async {
+  Future<void> _getRegisteredTrainings(training_plan_id) async {
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
     Uri url = Uri.parse("http://" +
@@ -102,7 +105,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
         ":" +
         dotenv.get('API_PORT') +
         "/api/training_plan/get_registered_trainings/" +
-        training_plan_id.toString());
+        training_plan_id);
 
     try {
       var response = await http.get(url).timeout(Duration(seconds: 10));
@@ -111,11 +114,14 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
       // print(jsonResponse['training_menu']);
       if (!mounted) return;
       setState(() {
-        // --------
+        // トレーニングプランの詳細をWidgetに設定
+        training_plan_name =
+            jsonResponse['training_plan']['training_plan_name'];
+        training_plan_description =
+            jsonResponse['training_plan']['training_plan_description'];
+
         // トレーニングメニューのデータを作成
-        // --------
         trainings_registered = jsonResponse['user_training_menu'];
-        print(trainings_registered);
 
         // スピナー非表示
         _loading = false;
@@ -167,9 +173,72 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   }
 
   // ----------------------------
-  // アイテムを追加するダイアログ
+  // トレーニングプラン自体を削除する
   // ----------------------------
-  void removeTraining(int index, String training_name) {
+  Future<void> _deleteUserTrainingPlan(training_plan_id) async {
+    // スピナー表示
+    setState(() {
+      _loading = true;
+    });
+
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" +
+        dotenv.get('API_HOST') +
+        ":" +
+        dotenv.get('API_PORT') +
+        "/api/training_plan/delete_training_plan/" +
+        training_plan_id.toString());
+
+    // POSTリクエストを投げる
+    try {
+      http.Response response =
+          await http.delete(url).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      print(jsonResponse);
+      _getRegisteredTrainings(training_plan_id);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  // ----------------------------
+  // トレーニングプランからメニューを削除する
+  // ----------------------------
+  Future<void> _deleteFromUserTrainingMenu(user_training_id) async {
+    // スピナー表示
+    setState(() {
+      _loading = true;
+    });
+
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" +
+        dotenv.get('API_HOST') +
+        ":" +
+        dotenv.get('API_PORT') +
+        "/api/training_plan/delete_user_training_menu/" +
+        user_training_id.toString());
+
+    // POSTリクエストを投げる
+    try {
+      http.Response response =
+          await http.delete(url).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      print(jsonResponse);
+      _getRegisteredTrainings(training_plan_id);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  // ----------------------------
+  // トレーニングメニューを削除するダイアログ
+  // ----------------------------
+  void _deleteTrainingDialog(
+      int index, String training_name, int user_training_id) {
     showDialog(
       context: context,
       builder: (_) {
@@ -183,7 +252,38 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
             ),
             TextButton(
               child: Text("OK"),
+              onPressed: () {
+                _deleteFromUserTrainingMenu(user_training_id);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ----------------------------
+  // トレーニングプランを削除するダイアログ
+  // ----------------------------
+  void _deleteTrainingPlanDialog(String training_plan_id, String training_plan_name) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          // title: Text(training_name),
+          content: Text("トレーニングプラン「" + training_plan_name + "」を削除します。よろしいですか？"),
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
               onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                _deleteUserTrainingPlan(training_plan_id);
+                Navigator.of(context).pop();
+              },
             ),
           ],
         );
@@ -199,10 +299,10 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
     training_plan_id = widget.training_plan_id;
 
     // トレーニングプランに登録済みのトレーニングメニューを取得する
-    getRegisteredTrainings(training_plan_id);
+    _getRegisteredTrainings(training_plan_id);
 
     // 登録済みの全トレーニングメニューを取得する
-    getAllTrainingMenu();
+    _getAllTrainingMenu();
   }
 
   // ********************
@@ -227,6 +327,22 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
+            const SizedBox(height: 8),
+            SizedBox(
+              child: Text(
+                training_plan_name,
+                style: TextStyle(fontWeight: FontWeight.bold)
+                    .copyWith(color: Colors.white70, fontSize: 16.0),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              child: Text(
+                training_plan_description,
+                style:
+                    TextStyle().copyWith(color: Colors.white70, fontSize: 12.0),
+              ),
+            ),
             // トレーニングプランに設定されているトレーニング一覧
             const SizedBox(height: 8),
             Flexible(
@@ -249,8 +365,11 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                                       icon: Icons.delete,
                                       label: '削除',
                                       onPressed: (context) {
-                                        removeTraining(
-                                            index, training['training_name']);
+                                        _deleteTrainingDialog(
+                                            index,
+                                            training['training_name'],
+                                            trainings_registered[index]
+                                                ['user_training_id']);
                                       })
                                 ]),
                             child: buildTrainingListTile(training));
@@ -286,7 +405,11 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red, // background
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  _deleteTrainingPlanDialog(training_plan_id, training_plan_name);
+
+                  // _deleteUserTrainingPlan(training_plan_id);
+                },
               ),
             ),
           ],
@@ -307,44 +430,8 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
               foregroundImage: AssetImage("assets/images/chest.png")),
           title: Text(training['training_name']),
           onTap: () {
-            showModalBottomSheet(
-              isScrollControlled: true,
-              context: context,
-              builder: (BuildContext context) {
-                return SizedBox(
-                  height: 800,
-                  width: double.infinity,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Column(children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            training['training_name'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.bold)
-                                .copyWith(
-                                    color: Colors.white70, fontSize: 18.0),
-                          ),
-                        ),
-                        TextButton(
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.blue),
-                          onPressed: () {
-                            Navigator.pop(context); // Close the sheet.
-                          },
-                          // child: Text("閉じる", style: TextStyle(color: Theme.of(context).colorScheme.primary)), // Add the button text.
-                          child: Text("閉じる",
-                              style: TextStyle(
-                                  color: Colors.white)), // Add the button text.
-                        ),
-                      ]),
-                    ),
-                  ),
-                );
-              },
-            );
+            // トレーニングのコンテンツのモーダルを表示する
+            showTrainingContentModal(context, training);
           },
         )
       ]));

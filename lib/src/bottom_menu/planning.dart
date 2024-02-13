@@ -296,7 +296,9 @@ class _PlanningScreenState extends State<PlanningScreen> {
                                         MaterialPageRoute(
                                             builder: (context) =>
                                                 EditTrainingPlanScreen(
-                                                    training_plan_id: _registeredPlanList[index]['plan_id'])),
+                                                    training_plan_id:
+                                                        _registeredPlanList[
+                                                            index]['plan_id'].toString())),
                                       );
                                     },
                                     child: Container(
