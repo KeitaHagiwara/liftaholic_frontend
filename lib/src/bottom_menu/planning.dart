@@ -249,255 +249,274 @@ class _PlanningScreenState extends State<PlanningScreen> {
               child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
           : Container(
               child: _registeredPlanList.length == 0
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Icon(Icons.public_off, size: 50)]
-                  )
-                )
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                  // --------------------
-                  // アニメーションここから
-                  // --------------------
-                  // Lottie.network(
-                  //   // 'https://lottie.host/84241c93-f84c-4133-9d2b-4eeff328313a/XPxdU0Zv81.json',
-                  //   // 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
-                  //   'https://lottie.host/808890fb-72b9-4685-a6c4-e53abb13faeb/A5Pzml6y3B.json',
-                  //   width: 300,
-                  //   errorBuilder: (context, error, stackTrace) {
-                  //     return const Padding(
-                  //       padding: EdgeInsets.all(30.0),
-                  //       child: CircularProgressIndicator(),
-                  //     );
-                  //   },
-                  // ),
-                  // --------------------
-                  // アニメーションここまで
-                  // --------------------
-
-                  // --------------------
-                  // プランここから
-                  // --------------------
-                  Container(
-                      margin: EdgeInsets.only(left: 15),
-                      alignment: Alignment.centerLeft, //任意のプロパティ
-                      width: double.infinity,
-                      child: Text(
-                        'トレーニングプラン',
-                        style: TextStyle(fontWeight: FontWeight.bold)
-                            .copyWith(color: Colors.white70, fontSize: 18.0),
-                      )),
-                  SizedBox(
-                    height: 150,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        return Card(
-                            child: index == _registeredPlanList.length - 1
-                                ? InkWell(
-                                    onTap: () async {
-                                      // "push"で新規画面に遷移
-                                      // リスト追加画面から渡される値を受け取る
-                                      final newListText =
-                                          await Navigator.of(context).push(
-                                        MaterialPageRoute(builder: (context) {
-                                          // 遷移先の画面としてリスト追加画面を指定
-                                          return CreateTrainingPlanScreen();
-                                        }),
-                                      );
-                                      if (newListText != null) {
-                                        _createNewPlan(newListText);
-                                      }
-                                    },
-                                    child: Container(
-                                        width: 180,
-                                        child: Icon(Icons.add_circle,
-                                            color: Colors.blue)))
-                                : InkWell(
-                                    onTap: () async {
-                                      // "push"で新規画面に遷移
-                                      // リスト追加画面から渡される値を受け取る
-                                      final deleted_plan_id =
-                                          await Navigator.of(context).push(
-                                        MaterialPageRoute(builder: (context) {
-                                          // 遷移先の画面としてリスト追加画面を指定
-                                          return EditTrainingPlanScreen(
-                                              training_plan_id:
-                                                  _registeredPlanList[index]
-                                                          ['plan_id']
-                                                      .toString(),
-                                              registered_plan_list:
-                                                  _registeredPlanList);
-                                        }),
-                                      );
-                                      if (deleted_plan_id != null) {
-                                        _deleteRegisteredPlan(deleted_plan_id);
-                                      }
-                                      // トレーニングプラン編集画面から戻ってきた場合は画面をリロードする
-                                      _getTrainingPlans(uid);
-                                    },
-                                    child: Container(
-                                      width: 180,
-                                      child: Column(
-                                        children: <Widget>[
-                                          ListTile(
-                                            // leading: CircleAvatar(
-                                            //   child: Text((index + 1).toString()),
-                                            //   backgroundColor: Colors.blue,
-                                            // ),
-                                            // leading: CircleAvatar(foregroundImage: AssetImage("assets/test_user.jpeg")),
-                                            title: Text(
-                                                _registeredPlanList[index]
-                                                        ['plan_title']
-                                                    .toString(),
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            subtitle: Text(
-                                                _registeredPlanList[index]
-                                                            ['plan_description']
-                                                        .toString() +
-                                                    '\n' +
-                                                    _registeredPlanList[index]
-                                                            ['plan_counts']
-                                                        .toString() +
-                                                    ' trainings'),
-                                            trailing: Icon(Icons
-                                                .arrow_forward_ios_rounded),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ));
-                      },
-                      itemCount: _registeredPlanList.length,
-                    ),
-                  ),
-                  // --------------------
-                  // プランここまで
-                  // --------------------
-
-                  // --------------------
-                  // カレンダーここから
-                  // --------------------
-                  Container(
-                      margin: EdgeInsets.only(left: 15.0, top: 20.0),
-                      alignment: Alignment.centerLeft, //任意のプロパティ
-                      width: double.infinity,
-                      child: Text(
-                        'スケジュール',
-                        style: TextStyle(fontWeight: FontWeight.bold)
-                            .copyWith(color: Colors.white70, fontSize: 18.0),
-                      )),
-                  Padding(
-                    padding: const EdgeInsets.all(0.0),
-                    child: TableCalendar(
-                        locale: 'ja_JP',
-                        firstDay: DateTime.utc(2023, 1, 1),
-                        lastDay: DateTime.utc(2024, 12, 31),
-                        focusedDay: _focusedDay,
-                        eventLoader: (date) {
-                          // イベントドット処理
-                          return _calendarMap[date] ?? [];
-                        },
-                        calendarBuilders: CalendarBuilders(
-                            markerBuilder: (context, date, events) {
-                          if (events.isNotEmpty) {
-                            return Positioned(
-                              right: 5,
-                              bottom: 5,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.red[300],
-                                ),
-                                width: 16.0,
-                                height: 16.0,
-                                child: Center(
-                                  child: Text(
-                                    '${events.length}',
-                                    style: TextStyle().copyWith(
-                                      color: Colors.white,
-                                      fontSize: 12.0,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          ;
-                        }),
-                        calendarStyle: CalendarStyle(
-                          // defaultTextStyle:TextStyle(color: Colors.blue),
-                          // weekNumberTextStyle:TextStyle(color: Colors.red),
-                          selectedDecoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          // todayDecoration: BoxDecoration(
-                          //   color: Colors.red[300],
-                          //   shape: BoxShape.circle,
+                  ? Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [Icon(Icons.public_off, size: 50)]))
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                          // --------------------
+                          // アニメーションここから
+                          // --------------------
+                          // Lottie.network(
+                          //   // 'https://lottie.host/84241c93-f84c-4133-9d2b-4eeff328313a/XPxdU0Zv81.json',
+                          //   // 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
+                          //   'https://lottie.host/808890fb-72b9-4685-a6c4-e53abb13faeb/A5Pzml6y3B.json',
+                          //   width: 300,
+                          //   errorBuilder: (context, error, stackTrace) {
+                          //     return const Padding(
+                          //       padding: EdgeInsets.all(30.0),
+                          //       child: CircularProgressIndicator(),
+                          //     );
+                          //   },
                           // ),
-                          weekendTextStyle: TextStyle(color: Colors.orange),
-                        ),
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                        ),
-                        calendarFormat: _calendarFormat, // デフォを月表示に設定
-                        onFormatChanged: (format) {
-                          // 「月」「週」変更
-                          if (_calendarFormat != format) {
-                            setState(() {
-                              _calendarFormat = format;
-                            });
-                          }
-                        },
-                        // 選択日のアニメーション
-                        selectedDayPredicate: (day) {
-                          return isSameDay(_selectedDay, day);
-                        },
-                        // 日付が選択されたときの処理
-                        onDaySelected: (selectedDay, focusedDay) {
-                          // 選択された日付が2回タップされた場合にモーダルを表示する
-                          if (_selectedDay == selectedDay) {
-                            print(_selectedEvents);
-                            showCalendarModal(
-                                context, uid, selectedDay, ['test1', 'test2']);
-                          }
+                          // --------------------
+                          // アニメーションここまで
+                          // --------------------
 
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                            _selectedEvents =
-                                _calendarEvents[selectedDay] ?? [];
-                          });
-                        }),
-                  ),
-                  // タップした時表示するリスト
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _selectedEvents.length,
-                      itemBuilder: (context, index) {
-                        final event = _selectedEvents[index];
-                        return Card(
-                          child: ListTile(
-                            title: Text(event),
-                            onTap: () {
-                              print(event);
-                            },
+                          // --------------------
+                          // プランここから
+                          // --------------------
+                          Container(
+                              margin: EdgeInsets.only(left: 15),
+                              alignment: Alignment.centerLeft, //任意のプロパティ
+                              width: double.infinity,
+                              child: Text(
+                                'トレーニングプラン',
+                                style: TextStyle(fontWeight: FontWeight.bold)
+                                    .copyWith(
+                                        color: Colors.white70, fontSize: 18.0),
+                              )),
+                          SizedBox(
+                            height: 150,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemBuilder: (context, index) {
+                                return Card(
+                                    child: index ==
+                                            _registeredPlanList.length - 1
+                                        ? InkWell(
+                                            onTap: () async {
+                                              // "push"で新規画面に遷移
+                                              // リスト追加画面から渡される値を受け取る
+                                              final newListText =
+                                                  await Navigator.of(context)
+                                                      .push(
+                                                MaterialPageRoute(
+                                                    builder: (context) {
+                                                  // 遷移先の画面としてリスト追加画面を指定
+                                                  return CreateTrainingPlanScreen();
+                                                }),
+                                              );
+                                              if (newListText != null) {
+                                                _createNewPlan(newListText);
+                                              }
+                                            },
+                                            child: Container(
+                                                width: 180,
+                                                child: Icon(Icons.add_circle,
+                                                    color: Colors.blue)))
+                                        : InkWell(
+                                            onTap: () async {
+                                              // "push"で新規画面に遷移
+                                              // リスト追加画面から渡される値を受け取る
+                                              final deleted_plan_id =
+                                                  await Navigator.of(context)
+                                                      .push(
+                                                MaterialPageRoute(
+                                                    builder: (context) {
+                                                  // 遷移先の画面としてリスト追加画面を指定
+                                                  return EditTrainingPlanScreen(
+                                                      training_plan_id:
+                                                          _registeredPlanList[
+                                                                      index]
+                                                                  ['plan_id']
+                                                              .toString(),
+                                                      registered_plan_list:
+                                                          _registeredPlanList);
+                                                }),
+                                              );
+                                              if (deleted_plan_id != null) {
+                                                _deleteRegisteredPlan(
+                                                    deleted_plan_id);
+                                              }
+                                              // トレーニングプラン編集画面から戻ってきた場合は画面をリロードする
+                                              _getTrainingPlans(uid);
+                                            },
+                                            child: Container(
+                                              width: 180,
+                                              child: Column(
+                                                children: <Widget>[
+                                                  ListTile(
+                                                    // leading: CircleAvatar(
+                                                    //   child: Text((index + 1).toString()),
+                                                    //   backgroundColor: Colors.blue,
+                                                    // ),
+                                                    // leading: CircleAvatar(foregroundImage: AssetImage("assets/test_user.jpeg")),
+                                                    title: Text(
+                                                        _registeredPlanList[
+                                                                    index]
+                                                                ['plan_title']
+                                                            .toString(),
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                    subtitle: Text(
+                                                        _registeredPlanList[
+                                                                        index][
+                                                                    'plan_description']
+                                                                .toString() +
+                                                            '\n' +
+                                                            _registeredPlanList[
+                                                                        index][
+                                                                    'plan_counts']
+                                                                .toString() +
+                                                            ' trainings'),
+                                                    trailing: Icon(Icons
+                                                        .arrow_forward_ios_rounded),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ));
+                              },
+                              itemCount: _registeredPlanList.length,
+                            ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  // --------------------
-                  // カレンダーここまで
-                  // --------------------
-                ])),
+                          // --------------------
+                          // プランここまで
+                          // --------------------
+
+                          // --------------------
+                          // カレンダーここから
+                          // --------------------
+                          Container(
+                              margin: EdgeInsets.only(left: 15.0, top: 20.0),
+                              alignment: Alignment.centerLeft, //任意のプロパティ
+                              width: double.infinity,
+                              child: Text(
+                                'スケジュール',
+                                style: TextStyle(fontWeight: FontWeight.bold)
+                                    .copyWith(
+                                        color: Colors.white70, fontSize: 18.0),
+                              )),
+                          Padding(
+                            padding: const EdgeInsets.all(0.0),
+                            child: TableCalendar(
+                                locale: 'ja_JP',
+                                firstDay: DateTime.utc(2023, 1, 1),
+                                lastDay: DateTime.utc(2024, 12, 31),
+                                focusedDay: _focusedDay,
+                                eventLoader: (date) {
+                                  // イベントドット処理
+                                  return _calendarMap[date] ?? [];
+                                },
+                                calendarBuilders: CalendarBuilders(
+                                    markerBuilder: (context, date, events) {
+                                  if (events.isNotEmpty) {
+                                    return Positioned(
+                                      right: 5,
+                                      bottom: 5,
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.red[300],
+                                        ),
+                                        width: 16.0,
+                                        height: 16.0,
+                                        child: Center(
+                                          child: Text(
+                                            '${events.length}',
+                                            style: TextStyle().copyWith(
+                                              color: Colors.white,
+                                              fontSize: 12.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  ;
+                                }),
+                                calendarStyle: CalendarStyle(
+                                  // defaultTextStyle:TextStyle(color: Colors.blue),
+                                  // weekNumberTextStyle:TextStyle(color: Colors.red),
+                                  selectedDecoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  // todayDecoration: BoxDecoration(
+                                  //   color: Colors.red[300],
+                                  //   shape: BoxShape.circle,
+                                  // ),
+                                  weekendTextStyle:
+                                      TextStyle(color: Colors.orange),
+                                ),
+                                headerStyle: HeaderStyle(
+                                  formatButtonVisible: false,
+                                  titleCentered: true,
+                                ),
+                                calendarFormat: _calendarFormat, // デフォを月表示に設定
+                                onFormatChanged: (format) {
+                                  // 「月」「週」変更
+                                  if (_calendarFormat != format) {
+                                    setState(() {
+                                      _calendarFormat = format;
+                                    });
+                                  }
+                                },
+                                // 選択日のアニメーション
+                                selectedDayPredicate: (day) {
+                                  return isSameDay(_selectedDay, day);
+                                },
+                                // 日付が選択されたときの処理
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  // 選択された日付が2回タップされた場合にモーダルを表示する
+                                  if (_selectedDay == selectedDay) {
+                                    print(_selectedEvents);
+                                    showCalendarModal(context, uid, selectedDay,
+                                        ['test1', 'test2']);
+                                  }
+
+                                  setState(() {
+                                    _selectedDay = selectedDay;
+                                    _focusedDay = focusedDay;
+                                    _selectedEvents =
+                                        _calendarEvents[selectedDay] ?? [];
+                                  });
+                                }),
+                          ),
+                          // タップした時表示するリスト
+                          Expanded(
+                            child: _selectedEvents.length == 0
+                                ? Center(
+                                    child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [Text('予定はありません。')]))
+                                : ListView.builder(
+                                  itemCount: _selectedEvents.length,
+                                  itemBuilder: (context, index) {
+                                    final event = _selectedEvents[index];
+                                    return Card(
+                                      child: ListTile(
+                                        title: Text(event),
+                                        onTap: () {
+                                          print(event);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                          ),
+                          // --------------------
+                          // カレンダーここまで
+                          // --------------------
+                        ])),
       // floatingActionButton: FloatingActionButton(
       //   shape: RoundedRectangleBorder(
       //     borderRadius: BorderRadius.circular(100), //角の丸み

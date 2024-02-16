@@ -493,6 +493,10 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
           leading: CircleAvatar(
               foregroundImage: AssetImage("assets/images/chest.png")),
           title: Text(training['training_name']),
+          trailing: (training['sets'] != null && training['reps'] != null  && training['kgs'] != null)
+            ? Icon(Icons.check, color: Colors.green)
+            : Icon(Icons.settings, color: Colors.white70)
+          ,
           onTap: () {
             // トレーニングのコンテンツのモーダルを表示する
             showTrainingContentModal(context, training);
