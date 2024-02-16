@@ -7,6 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 
 import '../firebase/user_info.dart';
+import '../common/dialogs.dart';
+import '../common/error_messages.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -58,16 +60,22 @@ class _NortificationScreenState extends State<NotificationScreen>
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (!mounted) return;
+      if (jsonResponse['statusCode'] == 200) {
+        setState(() {
+          results = jsonResponse['result'];
+        });
+      } else {
+        AlertDialogTemplate(
+            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+      }
+    } catch (e) {
+      //リクエストに失敗した場合はエラーメッセージを表示
+      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+    } finally {
       setState(() {
-        results = jsonResponse["result"];
-
         // スピナー非表示
         _loading = false;
       });
-    } catch (e) {
-      //リクエストに失敗した場合は"error"と表示
-      print(e);
-      debugPrint('error');
     }
   }
 
@@ -161,10 +169,13 @@ class _NortificationScreenState extends State<NotificationScreen>
                                 ),
                                 // default: 'https://lottie.host/13f1ca31-c177-4ebc-a64a-28f82a15c786/BmrjCFDPXQ.json',
                                 // custom1 : 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
-                                if (results[tab.text][index]['animation_width'] != null) ...[
+                                if (results[tab.text][index]
+                                        ['animation_width'] !=
+                                    null) ...[
                                   Lottie.network(
                                     results[tab.text][index]['animation_link'],
-                                    width: double.parse(results[tab.text][index]['animation_width']),
+                                    width: double.parse(results[tab.text][index]
+                                        ['animation_width']),
                                     errorBuilder: (context, error, stackTrace) {
                                       return const Padding(
                                         padding: EdgeInsets.all(0.0),

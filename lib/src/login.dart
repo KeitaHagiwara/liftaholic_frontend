@@ -110,6 +110,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app.dart';
+import 'common/dialogs.dart';
+import 'common/error_messages.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -133,7 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
         email: data.name,
         password: data.password,
       );
-
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'invalid-email':
@@ -195,11 +196,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       //リクエスト結果をコンソール出力
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      if (jsonResponse['result']['status_code'] != 200){
-        print(jsonResponse);
-        return jsonResponse['result']['status_msg'];
+      if (jsonResponse['statusCode'] != 200) {
+        AlertDialogTemplate(
+            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
       }
-
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'weak-password':
@@ -214,8 +214,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       return error_message;
     } catch (e) {
-      error_message = '予期せぬエラーが発生しました。';
-      return error_message;
+      AlertDialogTemplate(
+        context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
     }
   }
 

@@ -12,6 +12,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
+import '../common/dialogs.dart';
+import '../common/error_messages.dart';
 import '../planning/create_training_plan.dart';
 import '../planning/edit_training_plan.dart';
 import '../planning/show_calendar_modal.dart';
@@ -60,7 +62,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
   // サーバーアクセス処理
   // ********************
   // ユーザー名を強制的に設定させる
-  Future<void> UpdateUserNameDialog(BuildContext context) async {
+  Future<void> _updateUserNameDialog(BuildContext context) async {
     //処理が重い(?)からか、非同期処理にする
     return showDialog(
         context: context,
@@ -103,7 +105,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
         });
   }
 
-  Future<void> getTrainingPlans(uid) async {
+  Future<void> _getTrainingPlans(uid) async {
     // スピナー表示
     setState(() {
       _loading = true;
@@ -127,51 +129,61 @@ class _PlanningScreenState extends State<PlanningScreen> {
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       if (!mounted) return;
-      setState(() {
-        // --------
-        // トレーニングプランのデータを作成
-        // --------
-        List result_tp = jsonResponse['training_plans'];
-        for (int i = 0; i < result_tp.length; i++) {
+      if (jsonResponse['statusCode'] == 200) {
+        setState(() {
+          // --------
+          // トレーニングプランのデータを作成
+          // --------
+          List result_tp = jsonResponse['training_plans'];
+          // リストを初期化しておく
+          _registeredPlanList = [];
+          for (int i = 0; i < result_tp.length; i++) {
+            _registeredPlanList.add(
+              {
+                'plan_id': result_tp[i]['training_plan_id'],
+                'plan_title': result_tp[i]['training_title'],
+                'plan_description': result_tp[i]['training_description'] == ''
+                    ? plan_not_registered
+                    : result_tp[i]['training_description'],
+                'plan_counts': result_tp[i]['training_counts'].toString(),
+              },
+            );
+          }
+          // 追加ボタンのカード用
           _registeredPlanList.add(
-            {
-              'plan_id': result_tp[i]['training_plan_id'],
-              'plan_title': result_tp[i]['training_title'],
-              'plan_description': result_tp[i]['training_description'] == ''
-                  ? plan_not_registered
-                  : result_tp[i]['training_description'],
-              'plan_counts': result_tp[i]['training_counts'].toString(),
-            },
+            {"plan_title": "", "plan_description": "", "plan_counts": 0},
           );
-        }
-        // 追加ボタンのカード用
-        _registeredPlanList.add(
-          {"plan_title": "", "plan_description": "", "plan_counts": 0},
-        );
 
-        // --------
-        // ユーザーカレンダーのデータを作成
-        // --------
-        List result_ce = jsonResponse['calendar_events'];
-        for (int i = 0; i < result_ce.length; i++) {
-          var key = DateTime.utc(result_ce[i]['ce_year'],
-              result_ce[i]['ce_month'], result_ce[i]['ce_day']);
-          final event_list = result_ce[i]['event_list'].cast<String>();
-          _calendarMap[key] = event_list;
-          _calendarEvents[key] = event_list;
-        }
-
+          // --------
+          // ユーザーカレンダーのデータを作成
+          // --------
+          List result_ce = jsonResponse['calendar_events'];
+          for (int i = 0; i < result_ce.length; i++) {
+            var key = DateTime.utc(result_ce[i]['ce_year'],
+                result_ce[i]['ce_month'], result_ce[i]['ce_day']);
+            final event_list = result_ce[i]['event_list'].cast<String>();
+            _calendarMap[key] = event_list;
+            _calendarEvents[key] = event_list;
+          }
+        });
+      } else {
+        //リクエストに失敗した場合はエラーメッセージを表示
+        AlertDialogTemplate(
+            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+      }
+    } catch (e) {
+      //リクエストに失敗した場合はエラーメッセージを表示
+      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+    } finally {
+      setState(() {
         // スピナー非表示
         _loading = false;
       });
-    } catch (e) {
-      //リクエストに失敗した場合は"error"と表示
-      print(e);
-      debugPrint('error');
     }
   }
 
-  void createNewPlan(newListText) {
+  // 新規作成したトレーニングプランの画面更新を行う
+  void _createNewPlan(newListText) {
     // リスト追加
     final _newPlan = {
       'plan_id': newListText['plan_id'],
@@ -182,7 +194,21 @@ class _PlanningScreenState extends State<PlanningScreen> {
           : newListText['training_description'],
       'plan_counts': newListText['training_count']
     };
-    _registeredPlanList.insert(_registeredPlanList.length - 1, _newPlan);
+    setState(() {
+      // 最後から2つ目に新規作成したトレーニングプランを追加する
+      _registeredPlanList.insert(_registeredPlanList.length - 1, _newPlan);
+    });
+  }
+
+  // 削除したトレーニングプランを画面更新を行う
+  void _deleteRegisteredPlan(deleted_plan_id) {
+    for (int idx = 0; idx < _registeredPlanList.length; idx++) {
+      if (_registeredPlanList[idx]['plan_id'] == deleted_plan_id) {
+        setState(() {
+          _registeredPlanList.removeAt(idx);
+        });
+      }
+    }
   }
 
   // ********************
@@ -198,10 +224,10 @@ class _PlanningScreenState extends State<PlanningScreen> {
 
     if (username == null) {
       Future.delayed(Duration.zero, () {
-        UpdateUserNameDialog(context);
+        _updateUserNameDialog(context);
       });
     }
-    getTrainingPlans(uid);
+    _getTrainingPlans(uid);
   }
 
   // ********************
@@ -222,7 +248,14 @@ class _PlanningScreenState extends State<PlanningScreen> {
           ? const Center(
               child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
           : Container(
-              child: Column(
+              child: _registeredPlanList.length == 0
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Icon(Icons.public_off, size: 50)]
+                  )
+                )
+              : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                   // --------------------
@@ -275,10 +308,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
                                         }),
                                       );
                                       if (newListText != null) {
-                                        // キャンセルした場合は newListText が null となるので注意
-                                        setState(() {
-                                          createNewPlan(newListText);
-                                        });
+                                        _createNewPlan(newListText);
                                       }
                                     },
                                     child: Container(
@@ -289,17 +319,24 @@ class _PlanningScreenState extends State<PlanningScreen> {
                                     onTap: () async {
                                       // "push"で新規画面に遷移
                                       // リスト追加画面から渡される値を受け取る
-                                      print(_registeredPlanList[index]
-                                          ['plan_id']);
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                EditTrainingPlanScreen(
-                                                    training_plan_id:
-                                                        _registeredPlanList[
-                                                            index]['plan_id'].toString())),
+                                      final deleted_plan_id =
+                                          await Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (context) {
+                                          // 遷移先の画面としてリスト追加画面を指定
+                                          return EditTrainingPlanScreen(
+                                              training_plan_id:
+                                                  _registeredPlanList[index]
+                                                          ['plan_id']
+                                                      .toString(),
+                                              registered_plan_list:
+                                                  _registeredPlanList);
+                                        }),
                                       );
+                                      if (deleted_plan_id != null) {
+                                        _deleteRegisteredPlan(deleted_plan_id);
+                                      }
+                                      // トレーニングプラン編集画面から戻ってきた場合は画面をリロードする
+                                      _getTrainingPlans(uid);
                                     },
                                     child: Container(
                                       width: 180,
