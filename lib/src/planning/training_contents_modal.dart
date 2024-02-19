@@ -62,7 +62,7 @@ Future<void> _customizeUserTrainings(
 }
 
 // トレーニング内容のモーダルを表示する
-void showTrainingContentModal(context, Map training) {
+void showTrainingContentModal(context, Map training, bool is_setting) {
   // テキストフィールドのコントローラーを設定する
   final TextEditingController _controllerSets = training['sets'] == null
       ? TextEditingController()
@@ -94,124 +94,126 @@ void showTrainingContentModal(context, Map training) {
                       .copyWith(color: Colors.white70, fontSize: 18.0),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  // --------
-                  // sets
-                  // --------
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.all(18.0),
-                      child: TextFormField(
-                        controller: _controllerSets,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(2),
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        textAlign: TextAlign.center,
-                        // decoration: InputDecoration(
-                        //   enabledBorder: OutlineInputBorder(
-                        //     borderSide: BorderSide(color: Colors.blue)
-                        //   ),
-                        //   focusedBorder: OutlineInputBorder(
-                        //     borderSide: BorderSide(color: Colors.orange)
-                        //   )
-                        // ),
+              if (is_setting) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    // --------
+                    // sets
+                    // --------
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: TextFormField(
+                          controller: _controllerSets,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(2),
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          textAlign: TextAlign.center,
+                          // decoration: InputDecoration(
+                          //   enabledBorder: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.blue)
+                          //   ),
+                          //   focusedBorder: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.orange)
+                          //   )
+                          // ),
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    "sets ",
-                    textAlign: TextAlign.center,
-                    style: TextStyle()
-                        .copyWith(color: Colors.white70, fontSize: 18.0),
-                  ),
-                  // --------
-                  // reps
-                  // --------
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextFormField(
-                        controller: _controllerReps,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(2),
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        textAlign: TextAlign.center,
-                        // decoration: InputDecoration(
-                        //   enabledBorder: OutlineInputBorder(
-                        //     borderSide: BorderSide(color: Colors.blue)
-                        //   ),
-                        //   focusedBorder: OutlineInputBorder(
-                        //     borderSide: BorderSide(color: Colors.orange)
-                        //   )
-                        // ),
+                    Text(
+                      "sets ",
+                      textAlign: TextAlign.center,
+                      style: TextStyle()
+                          .copyWith(color: Colors.white70, fontSize: 18.0),
+                    ),
+                    // --------
+                    // reps
+                    // --------
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: _controllerReps,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(2),
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          textAlign: TextAlign.center,
+                          // decoration: InputDecoration(
+                          //   enabledBorder: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.blue)
+                          //   ),
+                          //   focusedBorder: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.orange)
+                          //   )
+                          // ),
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    "reps",
-                    textAlign: TextAlign.center,
-                    style: TextStyle()
-                        .copyWith(color: Colors.white70, fontSize: 18.0),
-                  ),
-                  // --------
-                  // kgs
-                  // --------
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextFormField(
-                        controller: _controllerKgs,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(3),
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        textAlign: TextAlign.center,
-                        // decoration: InputDecoration(
-                        //   enabledBorder: OutlineInputBorder(
-                        //     borderSide: BorderSide(color: Colors.blue)
-                        //   ),
-                        //   focusedBorder: OutlineInputBorder(
-                        //     borderSide: BorderSide(color: Colors.orange)
-                        //   )
-                        // ),
+                    Text(
+                      "reps",
+                      textAlign: TextAlign.center,
+                      style: TextStyle()
+                          .copyWith(color: Colors.white70, fontSize: 18.0),
+                    ),
+                    // --------
+                    // kgs
+                    // --------
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: _controllerKgs,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(3),
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          textAlign: TextAlign.center,
+                          // decoration: InputDecoration(
+                          //   enabledBorder: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.blue)
+                          //   ),
+                          //   focusedBorder: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.orange)
+                          //   )
+                          // ),
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    "kgs",
-                    textAlign: TextAlign.center,
-                    style: TextStyle()
-                        .copyWith(color: Colors.white70, fontSize: 18.0),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(left: 20),
-                    child: TextButton(
-                      style: TextButton.styleFrom(backgroundColor: Colors.blue),
-                      onPressed: () {
-                        _customizeUserTrainings(
-                            context,
-                            training['user_training_id'],
-                            _controllerSets.text,
-                            _controllerReps.text,
-                            _controllerKgs.text);
-                      },
-                      child: Text("更新",
-                          style: TextStyle(
-                              color: Colors.white)), // Add the button text.
+                    Text(
+                      "kgs",
+                      textAlign: TextAlign.center,
+                      style: TextStyle()
+                          .copyWith(color: Colors.white70, fontSize: 18.0),
                     ),
-                  ),
+                    Container(
+                      margin: const EdgeInsets.only(left: 20),
+                      child: TextButton(
+                        style: TextButton.styleFrom(backgroundColor: Colors.blue),
+                        onPressed: () {
+                          _customizeUserTrainings(
+                              context,
+                              training['user_training_id'],
+                              _controllerSets.text,
+                              _controllerReps.text,
+                              _controllerKgs.text);
+                        },
+                        child: Text("更新",
+                            style: TextStyle(
+                                color: Colors.white)), // Add the button text.
+                      ),
+                    ),
 
-                  ///TODO add to db and previous added move
-                ],
-              ),
+                    ///TODO add to db and previous added move
+                  ],
+                ),
+              ],
               TextButton(
                 style: TextButton.styleFrom(backgroundColor: Colors.grey),
                 onPressed: () {

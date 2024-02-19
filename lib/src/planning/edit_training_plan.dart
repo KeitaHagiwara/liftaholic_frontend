@@ -420,23 +420,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                         : ListView.builder(
                             itemCount: trainings_registered.length,
                             itemBuilder: (BuildContext context, int index) {
-                              final training = trainings_registered[index];
-                              return Slidable(
-                                  endActionPane: ActionPane(
-                                      motion: const BehindMotion(),
-                                      children: [
-                                        SlidableAction(
-                                            backgroundColor: Colors.red,
-                                            icon: Icons.delete,
-                                            label: '削除',
-                                            onPressed: (context) {
-                                              _deleteTrainingDialog(
-                                                training['user_training_id'],
-                                                training['training_name'],
-                                              );
-                                            })
-                                      ]),
-                                  child: buildTrainingListTile(training));
+                              return buildTrainingListTile(trainings_registered[index]);
                             }),
                   ),
                   // トレーニング追加ボタン
@@ -488,21 +472,50 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   //
   // ********************
   Widget buildTrainingListTile(training) => Card(
-          child: Column(children: <Widget>[
+    child: Slidable(
+      endActionPane: ActionPane(
+        motion: const BehindMotion(),
+        children: [
+          SlidableAction(
+            backgroundColor: Colors.red,
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(10),
+              bottomRight: Radius.circular(10)
+            ),
+            icon: Icons.delete,
+            label: '削除',
+            onPressed: (context) {
+              _deleteTrainingDialog(
+                training['user_training_id'],
+                training['training_name'],
+              );
+            }
+          )
+        ]
+      ),
+      child: Column(children: <Widget>[
         ListTile(
           leading: CircleAvatar(
-              foregroundImage: AssetImage("assets/images/chest.png")),
+              foregroundImage: AssetImage(
+                  "assets/images/chest.png")),
           title: Text(training['training_name']),
-          trailing: (training['sets'] != null && training['reps'] != null  && training['kgs'] != null)
-            ? Icon(Icons.check, color: Colors.green)
-            : Icon(Icons.settings, color: Colors.white70)
-          ,
+          trailing: (training['sets'] != null &&
+                  training['reps'] != null &&
+                  training['kgs'] != null)
+              ? Icon(Icons.check,
+                  color: Colors.green)
+              : Icon(Icons.settings,
+                  color: Colors.white70),
           onTap: () {
             // トレーニングのコンテンツのモーダルを表示する
-            showTrainingContentModal(context, training);
+            var is_setting = true;
+            showTrainingContentModal(
+                context, training, is_setting);
           },
         )
-      ]));
+      ]
+    )),
+  );
 
   // ********************
   //
@@ -591,6 +604,9 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                                   motion: const ScrollMotion(),
                                   children: [
                                     SlidableAction(
+                                        borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(10),
+                                            bottomLeft: Radius.circular(10)),
                                         backgroundColor: Colors.green,
                                         icon: Icons.add,
                                         label: '追加',
@@ -605,17 +621,18 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                                               plan_id, training_no);
                                         })
                                   ]),
-                              // child: buildTrainingListTile(training)
                               child: ListTile(
                                 title: Text(List.from(
                                     List.from(trainings.values)[i]
                                         .values)[i_c1]['training_name']),
                                 onTap: () {
                                   // トレーニングのコンテンツのモーダルを表示する
+                                  var is_setting = false;
                                   showTrainingContentModal(
                                       context,
                                       List.from(List.from(trainings.values)[i]
-                                          .values)[i_c1]);
+                                          .values)[i_c1],
+                                      is_setting);
                                 },
                               ),
                             )
