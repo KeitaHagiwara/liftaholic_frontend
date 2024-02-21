@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../login.dart';
+import '../common/dialogs.dart';
+import '../common/error_messages.dart';
+import '../common/provider.dart';
 
-class AccountScreen extends StatefulWidget {
+class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({Key? key}) : super(key: key);
 
   @override
-  State<AccountScreen> createState() => _AccountScreenState();
+  _AccountScreenState createState() => _AccountScreenState();
 }
 
-class _AccountScreenState extends State<AccountScreen> {
+class _AccountScreenState extends ConsumerState<AccountScreen> {
   // イニシャライザ設定
   String? uid = '';
   String? email = '';
@@ -62,14 +66,8 @@ class _AccountScreenState extends State<AccountScreen> {
             style: TextStyle().copyWith(color: Colors.red),
           ),
           onPressed: () {
-            // set up the buttons
-            Widget cancelButton = TextButton(
-              child: Text("キャンセル"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            );
-            Widget continueButton = TextButton(
+            // ログアウト処理
+            Widget callbackButton = TextButton(
               child: Text("ログアウト"),
               onPressed: () async {
                 // ログアウト処理
@@ -83,21 +81,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 );
               },
             );
-            // set up the AlertDialog
-            AlertDialog alert = AlertDialog(
-              title: Text("ログアウト"),
-              content: Text("ログアウトします。よろしいですか？"),
-              actions: [
-                cancelButton,
-                continueButton,
-              ],
-            );
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return alert;
-              },
-            );
+            ConfirmDialogTemplate(
+                context, callbackButton, 'ログアウト', 'ログアウトします。よろしいですか？');
           },
         ),
       ])),

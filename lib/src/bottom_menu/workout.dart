@@ -3,54 +3,81 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import '../workout/add_training_menu.dart';
+import '../common/dialogs.dart';
+import '../common/error_messages.dart';
+import '../common/provider.dart';
+import '../workout/exec_workout_menu.dart';
+import '../planning/training_contents_modal.dart';
 
-class WorkoutScreen extends StatefulWidget {
+class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({Key? key}) : super(key: key);
 
   @override
-  State<WorkoutScreen> createState() => _WorkoutScreenState();
+  _WorkoutScreenState createState() => _WorkoutScreenState();
 }
 
-class _WorkoutScreenState extends State<WorkoutScreen> {
+class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   // イニシャライザ設定
   bool _loading = false;
 
-  String result = '';
+  List _registeredPlanList = [];
+  int _selectedPlan = 0;
+
+  Map _trainings_registered = {};
 
   bool isPressed = false;
   IconData icon = Icons.play_arrow;
   MaterialColor primaryColor = Colors.blue;
 
-  Future<void> getTrainingPlans() async {
-    // スピナー表示
+  // ----------------------------
+  // トレーニングプランに登録済みのトレーニングを取得する
+  // ----------------------------
+  Future<void> _getRegisteredTrainings(training_plan_id) async {
     setState(() {
+      // スピナー非表示
       _loading = true;
     });
 
-    // リクエスト先のurl
-    Uri url = Uri.parse("http://127.0.0.1:8080/api/workout");
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" +
+        dotenv.get('API_HOST') +
+        ":" +
+        dotenv.get('API_PORT') +
+        "/api/training_plan/get_registered_trainings/" +
+        training_plan_id.toString());
 
     try {
-      //リクエストを投げる
-      var response = await http.get(url);
-      //リクエスト結果をコンソール出力
-      // debugPrint(response.body);
-
-      var jsonResponse = jsonDecode(response.body);
-
       if (!mounted) return;
+      var response = await http.get(url).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      if (jsonResponse['statusCode'] == 200) {
+        setState(() {
+          // トレーニングメニューのデータを作成
+          _trainings_registered = jsonResponse['user_training_menu'];
+
+          // Providerに値を保存する
+          ref.read(selectedPlanProvider.notifier).state = training_plan_id;
+          ref.read(selectedTrainingMenuProvider.notifier).state =
+              _trainings_registered;
+        });
+      } else {
+        //リクエストに失敗した場合はエラーメッセージを表示
+        AlertDialogTemplate(
+            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+      }
+    } catch (e) {
+      //リクエストに失敗した場合はエラーメッセージを表示
+      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+    } finally {
       setState(() {
-        result = jsonResponse["greeting"];
-        print(result);
         // スピナー非表示
         _loading = false;
       });
-    } catch (e) {
-      //リクエストに失敗した場合は"error"と表示
-      print(e);
-      debugPrint('error');
     }
   }
 
@@ -58,192 +85,193 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   void initState() {
     super.initState();
 
-    getTrainingPlans();
+    // Providerの値をローカル変数に格納する
+    _registeredPlanList = ref.read(registeredPlanProvider.notifier).state;
+    _selectedPlan = ref.read(selectedPlanProvider.notifier).state;
+    _trainings_registered =
+        ref.read(selectedTrainingMenuProvider.notifier).state;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        // appBar: AppBar(
-        //   title: const Text('ホーム'),
-        // ),
         body: _loading
             ? const Center(
                 child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
-            : Center(
-                child: Column(
-                // children: [
-                //   Text(result, style: TextStyle(fontSize: 32.0)),
-                //   Container(
-                //     width: double.infinity,
-                //     child: TextField(
-                //       keyboardType: TextInputType.number,
-                //       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                //       controller: TextEditingController(text: '1'),
-                //     ),
-                //   ),
-                // ]
-
-                children: <Widget>[
-                  Text(
-                    // _programMovesGen(program)[index],
-                    'バイセップカール',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold)
-                        .copyWith(color: Colors.white70, fontSize: 18.0),
-                  ), // Move name
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      // --------
-                      // sets
-                      // --------
-                      Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.all(18.0),
-                          child: TextFormField(
-                            // controller: ontrollerSets,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textAlign: TextAlign.center,
-                            // decoration: InputDecoration(
-                            //   enabledBorder: OutlineInputBorder(
-                            //     borderSide: BorderSide(color: Colors.blue)
-                            //   ),
-                            //   focusedBorder: OutlineInputBorder(
-                            //     borderSide: BorderSide(color: Colors.orange)
-                            //   )
-                            // ),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        "sets ",
-                        textAlign: TextAlign.center,
-                        style: TextStyle()
-                            .copyWith(color: Colors.white70, fontSize: 18.0),
-                      ),
-                      // --------
-                      // reps
-                      // --------
-                      Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            // controller: controllerReps,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textAlign: TextAlign.center,
-                            // decoration: InputDecoration(
-                            //   enabledBorder: OutlineInputBorder(
-                            //     borderSide: BorderSide(color: Colors.blue)
-                            //   ),
-                            //   focusedBorder: OutlineInputBorder(
-                            //     borderSide: BorderSide(color: Colors.orange)
-                            //   )
-                            // ),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        "reps",
-                        textAlign: TextAlign.center,
-                        style: TextStyle()
-                            .copyWith(color: Colors.white70, fontSize: 18.0),
-                      ),
-                      // --------
-                      // kg
-                      // --------
-                      Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            // controller: controllerKgs,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            textAlign: TextAlign.center,
-                            // decoration: InputDecoration(
-                            //   enabledBorder: OutlineInputBorder(
-                            //     borderSide: BorderSide(color: Colors.blue)
-                            //   ),
-                            //   focusedBorder: OutlineInputBorder(
-                            //     borderSide: BorderSide(color: Colors.orange)
-                            //   )
-                            // ),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        "kg",
-                        textAlign: TextAlign.center,
-                        style: TextStyle()
-                            .copyWith(color: Colors.white70, fontSize: 18.0),
-                      ),
-                      Container(
-                          // height: 40,
-                          // width: 40,
-                          // margin: const EdgeInsets.all(16.0),
-                          // decoration: BoxDecoration(
-                          //   shape: BoxShape.circle,
-                          //   color: Colors.white,
-                          //   border: Border.all(
-                          //     color: Colors.blue,
-                          //     width: 2.0,
-                          //   ),
-                          // ),
-                          child: ElevatedButton.icon(
-                            icon: Icon(
-                              this.icon,
-                              color: Colors.yellow,
-                            ),
-                            label: Text(''),
-                            // style: ElevatedButton.styleFrom(
-                            //   primary: this.primaryColor,
-                            //   onPrimary: Colors.white,
-                            // ),
-                            onPressed: () {
-                              this.isPressed = !this.isPressed;
-                              setState(() {
-                                this.icon =
-                                this.isPressed ? Icons.stop : Icons.play_arrow;
-                                this.primaryColor = this.isPressed ? Colors.orange : Colors.blue;
-                              });
-                            },
-                          )
-                          // child: IconButton(
-                          //     icon: Icon(
-                          //       Icons.play_arrow,
-                          //       size: 35,
-                          //       color: Colors.blue,
-                          //     ),
-                          //     onPressed: () => {
-                          //       // isPressed = !isPressed,
-                          //       isPressed = !isPressed ? true : false,
-                          //       print(isPressed),
-                          //       setState(() {
-                          //         // icon = isPressed ? Icons.stop : Icons.play_arrow;
-                          //         // primaryColor = isPressed ? Colors.red : Colors.blue;
-                          //         this.icon = Icons.stop;
-                          //         this.primaryColor = Colors.red;
-                          //       }),
-                          //       // print('test'),
-                          //       // _saveMove(_programMovesGen(program)[index]),
-                          //     })
-                      ),
-                      ///TODO add to db and previous added move
-                    ],
-                  ),
-                ],
-              )));
+            : !ref.watch(isDoingWorkoutProvider) // ワークアウト実施中ではない場合
+                ? Container(
+                    child: _registeredPlanList.length == 0
+                        ? Center(
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [Icon(Icons.public_off, size: 50)]))
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                                Container(
+                                    margin: EdgeInsets.only(left: 15),
+                                    alignment: Alignment.centerLeft, //任意のプロパティ
+                                    width: double.infinity,
+                                    child: Text(
+                                      'トレーニングプラン',
+                                      style:
+                                          TextStyle(fontWeight: FontWeight.bold)
+                                              .copyWith(
+                                                  color: Colors.white70,
+                                                  fontSize: 18.0),
+                                    )),
+                                SizedBox(
+                                  height: 150,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: _registeredPlanList.length - 1,
+                                    itemBuilder: (context, index) {
+                                      return Card(
+                                          color: _registeredPlanList[index]
+                                                      ['plan_id'] ==
+                                                  _selectedPlan
+                                              ? Colors.blue
+                                              : null,
+                                          child: InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                var training_plan_id =
+                                                    _registeredPlanList[index]
+                                                        ['plan_id'];
+                                                _selectedPlan =
+                                                    training_plan_id;
+                                                _getRegisteredTrainings(
+                                                    training_plan_id);
+                                              });
+                                            },
+                                            child: Container(
+                                              width: 180,
+                                              child: Column(
+                                                children: <Widget>[
+                                                  ListTile(
+                                                    // leading: CircleAvatar(foregroundImage: AssetImage("assets/test_user.jpeg")),
+                                                    title: Text(
+                                                      _registeredPlanList[index]
+                                                              ['plan_title']
+                                                          .toString(),
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                    subtitle: Text(
+                                                      _registeredPlanList[index]
+                                                                  [
+                                                                  'plan_description']
+                                                              .toString() +
+                                                          '\n' +
+                                                          _registeredPlanList[
+                                                                      index][
+                                                                  'plan_counts']
+                                                              .toString() +
+                                                          ' trainings',
+                                                      style: TextStyle().copyWith(
+                                                          color: _registeredPlanList[
+                                                                          index]
+                                                                      [
+                                                                      'plan_id'] ==
+                                                                  _selectedPlan
+                                                              ? Colors.white
+                                                              : Colors.white70),
+                                                    ),
+                                                    trailing: _registeredPlanList[
+                                                                    index]
+                                                                ['plan_id'] ==
+                                                            _selectedPlan
+                                                        ? Icon(
+                                                            Icons.manage_search,
+                                                            color: Colors.white,
+                                                            size: 30)
+                                                        : Icon(Icons.menu),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ));
+                                    },
+                                  ),
+                                ),
+                                Container(
+                                    margin:
+                                        EdgeInsets.only(left: 15.0, top: 20.0),
+                                    alignment: Alignment.centerLeft, //任意のプロパティ
+                                    width: double.infinity,
+                                    child: Text(
+                                      'メニュー',
+                                      style:
+                                          TextStyle(fontWeight: FontWeight.bold)
+                                              .copyWith(
+                                                  color: Colors.white70,
+                                                  fontSize: 18.0),
+                                    )),
+                                const SizedBox(height: 8),
+                                Flexible(
+                                    child: _trainings_registered.length == 0
+                                        ? Center(
+                                            child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                Text('トレーニングプランが未選択です。')
+                                              ]))
+                                        : ListView.builder(
+                                            itemCount:
+                                                _trainings_registered.length,
+                                            itemBuilder: (BuildContext context,
+                                                int index) {
+                                              return Column(children: <Widget>[
+                                                ListTile(
+                                                    dense: true,
+                                                    title: Text('・' +
+                                                        _trainings_registered[
+                                                                List.from(_trainings_registered.keys)[index]]
+                                                            ['training_name']),
+                                                    onTap: () {
+                                                      var is_setting = false;
+                                                      showTrainingContentModal(
+                                                          context,
+                                                          _trainings_registered[
+                                                              List.from(_trainings_registered.keys)[index]],
+                                                          is_setting);
+                                                    })
+                                              ]);
+                                            })),
+                                ElevatedButton(
+                                    child: Text('ワークアウト開始',
+                                        style: TextStyle(color: Colors.white)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.green, // background
+                                    ),
+                                    onPressed: _selectedPlan == 0
+                                        ? null
+                                        : () {
+                                            Widget callbackButton = TextButton(
+                                              child: Text('開始'),
+                                              onPressed: () {
+                                                ref
+                                                    .read(isDoingWorkoutProvider
+                                                        .notifier)
+                                                    .state = true;
+                                                ref
+                                                    .read(execPlanIdProvider
+                                                        .notifier)
+                                                    .state = _selectedPlan;
+                                                // モーダルを閉じる
+                                                Navigator.of(context).pop();
+                                              },
+                                            );
+                                            ConfirmDialogTemplate(
+                                                context,
+                                                callbackButton,
+                                                'ワークアウト',
+                                                '選択したトレーニングプランを開始します。よろしいですか？');
+                                          }),
+                              ]))
+                : ExecWorkoutScreen() // ワークアウト実施中の場合
+        );
   }
 }

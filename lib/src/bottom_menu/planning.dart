@@ -3,6 +3,7 @@ import 'dart:convert';
 // import 'package:flutter/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -18,15 +19,16 @@ import '../planning/create_training_plan.dart';
 import '../planning/edit_training_plan.dart';
 import '../planning/show_calendar_modal.dart';
 import '../firebase/user_info.dart';
+import '../common/provider.dart';
 
-class PlanningScreen extends StatefulWidget {
+class PlanningScreen extends ConsumerStatefulWidget {
   const PlanningScreen({Key? key}) : super(key: key);
 
   @override
-  State<PlanningScreen> createState() => _PlanningScreenState();
+  _PlanningScreenState createState() => _PlanningScreenState();
 }
 
-class _PlanningScreenState extends State<PlanningScreen> {
+class _PlanningScreenState extends ConsumerState<PlanningScreen> {
   // ********************
   // イニシャライザ設定
   // ********************
@@ -128,6 +130,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
       // debugPrint(response.body);
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+
       if (!mounted) return;
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
@@ -153,6 +156,9 @@ class _PlanningScreenState extends State<PlanningScreen> {
           _registeredPlanList.add(
             {"plan_title": "", "plan_description": "", "plan_counts": 0},
           );
+
+          // Providerの変数に保存しておく
+          ref.read(registeredPlanProvider.notifier).state = _registeredPlanList;
 
           // --------
           // ユーザーカレンダーのデータを作成
@@ -292,6 +298,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
                             height: 150,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
+                              itemCount: _registeredPlanList.length,
                               itemBuilder: (context, index) {
                                 return Card(
                                     child: index ==
@@ -382,7 +389,6 @@ class _PlanningScreenState extends State<PlanningScreen> {
                                             ),
                                           ));
                               },
-                              itemCount: _registeredPlanList.length,
                             ),
                           ),
                           // --------------------
@@ -499,19 +505,19 @@ class _PlanningScreenState extends State<PlanningScreen> {
                                             MainAxisAlignment.center,
                                         children: [Text('予定はありません。')]))
                                 : ListView.builder(
-                                  itemCount: _selectedEvents.length,
-                                  itemBuilder: (context, index) {
-                                    final event = _selectedEvents[index];
-                                    return Card(
-                                      child: ListTile(
-                                        title: Text(event),
-                                        onTap: () {
-                                          print(event);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
+                                    itemCount: _selectedEvents.length,
+                                    itemBuilder: (context, index) {
+                                      final event = _selectedEvents[index];
+                                      return Card(
+                                        child: ListTile(
+                                          title: Text(event),
+                                          onTap: () {
+                                            print(event);
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  ),
                           ),
                           // --------------------
                           // カレンダーここまで

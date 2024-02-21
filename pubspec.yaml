@@ -25,6 +25,8 @@ dependencies:
   table_calendar: ^3.0.9
   intl: ^0.18.1
   flutter_slidable: ^3.0.1
+  flutter_riverpod: ^2.4.10
+  riverpod: ^2.5.0
 
 dev_dependencies:
   flutter_test:

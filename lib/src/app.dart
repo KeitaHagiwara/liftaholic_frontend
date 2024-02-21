@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,11 +12,11 @@ import 'bottom_menu/notification.dart';
 import 'bottom_menu/shopping.dart';
 import 'login.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'LIFTAHOLIC',
       theme: ThemeData(brightness: Brightness.dark),
@@ -72,7 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
         // title: Text('LIFTAHOLIC', style: GoogleFonts.bungeeSpice()),
         title: Text(
           'LIFTAHOLIC',
-          style: TextStyle(fontFamily: 'Honk', fontSize: 36, color: Colors.blue),
+          style:
+              TextStyle(fontFamily: 'Honk', fontSize: 36, color: Colors.blue),
         ),
         // actions: [
         //   IconButton(
@@ -94,7 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.event_note), label: 'プランニング'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.event_note), label: 'プランニング'),
           BottomNavigationBarItem(
               icon: Icon(Icons.fitness_center), label: 'ワークアウト'),
           BottomNavigationBarItem(

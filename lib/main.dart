@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -15,5 +16,9 @@ Future<void> main() async {
   );
   // カレンダーを日本語表記にする
   initializeDateFormatting('ja');
-  runApp(MyApp());
+  runApp(
+    ProviderScope(
+      child: MyApp()
+    )
+  );
 }

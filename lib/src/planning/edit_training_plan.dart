@@ -5,14 +5,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
+import '../common/provider.dart';
 import '../planning/training_contents_modal.dart';
 
-class EditTrainingPlanScreen extends StatefulWidget {
+class EditTrainingPlanScreen extends ConsumerStatefulWidget {
   const EditTrainingPlanScreen(
       {Key? key,
       required this.training_plan_id,
@@ -27,7 +29,8 @@ class EditTrainingPlanScreen extends StatefulWidget {
   _EditTrainingPlanScreenState createState() => _EditTrainingPlanScreenState();
 }
 
-class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
+class _EditTrainingPlanScreenState
+    extends ConsumerState<EditTrainingPlanScreen> {
   // ********************
   //
   // イニシャライザ設定
@@ -49,13 +52,13 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // トレーニングプランを作成するときに使用する辞書
   Map<String, String> _createPlanDict = {};
 
-  List trainings_registered = [];
+  Map _trainings_registered = {};
 
-  // List trainings_registered = [
-  //   {'training_name': 'ベンチプレス', 'description': 'bench'},
-  //   {'training_name': 'プッシュアップ', 'description': 'push-up'},
-  //   {'training_name': 'インクラインダンベルプレス', 'description': 'press'}
-  // ];
+  // Map _trainings_registered = {
+  //   1: {'training_name': 'ベンチプレス', 'description': 'bench'},
+  //   2: {'training_name': 'プッシュアップ', 'description': 'push-up'},
+  //   3: {'training_name': 'インクラインダンベルプレス', 'description': 'press'}
+  // };
 
   // トレーニングメニューを入れる辞書
   Map<String, dynamic> training_menu = {};
@@ -125,7 +128,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
         ":" +
         dotenv.get('API_PORT') +
         "/api/training_plan/get_registered_trainings/" +
-        training_plan_id);
+        training_plan_id.toString());
 
     try {
       if (!mounted) return;
@@ -141,7 +144,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
               jsonResponse['training_plan']['training_plan_description'];
 
           // トレーニングメニューのデータを作成
-          trainings_registered = jsonResponse['user_training_menu'];
+          _trainings_registered = jsonResponse['user_training_menu'];
         });
       } else {
         //リクエストに失敗した場合はエラーメッセージを表示
@@ -184,7 +187,8 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
-          trainings_registered.add(jsonResponse['add_data']);
+          _trainings_registered[jsonResponse['add_user_training_id'][0].toString()] =
+              jsonResponse['add_data'];
           //リクエストに失敗した場合はエラーメッセージを表示
           AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
         });
@@ -279,13 +283,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
         // 画面から該当のトレーニングを削除する
         setState(() {
           // 配列の何行目かを確認して、該当の配列番号の要素を削除する
-          for (int idx = 0; idx < trainings_registered.length; idx++) {
-            if (trainings_registered[idx]['user_training_id'].toString() ==
-                user_training_id.toString()) {
-              trainings_registered.removeAt(idx);
-              break;
-            }
-          }
+          _trainings_registered.remove(user_training_id);
         });
       }
       // スピナーを非表示にする
@@ -298,7 +296,7 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // ----------------------------
   // トレーニングメニューをプランから削除するダイアログ
   // ----------------------------
-  void _deleteTrainingDialog(int user_training_id, String training_name) {
+  void _deleteTrainingDialog(String user_training_id, String training_name) {
     showDialog(
       context: context,
       builder: (_) {
@@ -394,10 +392,73 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                 children: <Widget>[
                   const SizedBox(height: 8),
                   SizedBox(
-                    child: Text(
-                      training_plan_name,
-                      style: TextStyle(fontWeight: FontWeight.bold)
-                          .copyWith(color: Colors.white70, fontSize: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(''),
+                        Text(
+                          training_plan_name,
+                          style: TextStyle(fontWeight: FontWeight.bold)
+                              .copyWith(color: Colors.white70, fontSize: 16.0),
+                        ),
+                        ElevatedButton(
+                          child: !ref.watch(isDoingWorkoutProvider)
+                              ? _trainings_registered.length > 0
+                                  ? Icon(Icons.play_arrow, color: Colors.green)
+                                  : Icon(Icons.play_arrow, color: Colors.grey)
+                              : Icon(Icons.stop, color: Colors.red),
+                          style: ElevatedButton.styleFrom(
+                            // side: BorderSide(color: Colors.green),
+                            backgroundColor: Colors.grey[900], // background
+                          ),
+                          onPressed: _trainings_registered.length == 0
+                              ? null
+                              : () {
+                                  if (!ref
+                                      .read(isDoingWorkoutProvider.notifier)
+                                      .state) {
+                                    Widget callbackButton = TextButton(
+                                      child: Text('開始'),
+                                      onPressed: () {
+                                        ref
+                                            .read(
+                                                isDoingWorkoutProvider.notifier)
+                                            .state = true;
+                                        ref
+                                            .read(execPlanIdProvider.notifier)
+                                            .state = int.parse(training_plan_id);
+                                        // モーダルを閉じる
+                                        Navigator.of(context).pop();
+                                      },
+                                    );
+                                    ConfirmDialogTemplate(
+                                        context,
+                                        callbackButton,
+                                        'ワークアウト',
+                                        'このトレーニングプランを開始します。よろしいですか？');
+                                  } else {
+                                    // ワークアウト実施中の場合
+                                    // ワークアウト終了の機能を表示する
+                                    Widget callbackButton = TextButton(
+                                      child: Text("終了"),
+                                      onPressed: () {
+                                        ref
+                                            .read(
+                                                isDoingWorkoutProvider.notifier)
+                                            .state = false;
+                                        // モーダルを閉じる
+                                        Navigator.of(context).pop();
+                                      },
+                                    );
+                                    ConfirmDialogTemplate(
+                                        context,
+                                        callbackButton,
+                                        "終了",
+                                        "実施中のワークアウトを終了します。よろしいですか？");
+                                  }
+                                },
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -412,15 +473,18 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                   const SizedBox(height: 8),
                   Flexible(
                     // height: 150,
-                    child: trainings_registered.length == 0
+                    child: _trainings_registered.length == 0
                         ? Center(
                             child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [Text('トレーニングが未登録です。')]))
                         : ListView.builder(
-                            itemCount: trainings_registered.length,
+                            itemCount: _trainings_registered.length,
                             itemBuilder: (BuildContext context, int index) {
-                              return buildTrainingListTile(trainings_registered[index]);
+                              var user_training_id =
+                                  List.from(_trainings_registered.keys)[index];
+                              return buildTrainingListTile(user_training_id,
+                                  _trainings_registered[user_training_id]);
                             }),
                   ),
                   // トレーニング追加ボタン
@@ -441,6 +505,23 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
                       },
                     ),
                   ),
+                  // const SizedBox(height: 8),
+                  // Container(
+                  //   padding: EdgeInsets.only(left: 64, right: 64),
+                  //   // 横幅いっぱいに広げる
+                  //   width: double.infinity,
+                  //   // リスト追加ボタン
+                  //   child: ElevatedButton(
+                  //     child: Text('ワークアウト開始',
+                  //         style: TextStyle(color: Colors.white)),
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: Colors.green, // background
+                  //     ),
+                  //     onPressed: () {
+                  //       print('ワークアウト開始');
+                  //     },
+                  //   ),
+                  // ),
                   // トレーニングプラン削除ボタン
                   const SizedBox(height: 8),
                   Container(
@@ -471,51 +552,42 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
   // トレーニングリストタイル
   //
   // ********************
-  Widget buildTrainingListTile(training) => Card(
-    child: Slidable(
-      endActionPane: ActionPane(
-        motion: const BehindMotion(),
-        children: [
-          SlidableAction(
-            backgroundColor: Colors.red,
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(10),
-              bottomRight: Radius.circular(10)
-            ),
-            icon: Icons.delete,
-            label: '削除',
-            onPressed: (context) {
-              _deleteTrainingDialog(
-                training['user_training_id'],
-                training['training_name'],
-              );
-            }
-          )
-        ]
-      ),
-      child: Column(children: <Widget>[
-        ListTile(
-          leading: CircleAvatar(
-              foregroundImage: AssetImage(
-                  "assets/images/chest.png")),
-          title: Text(training['training_name']),
-          trailing: (training['sets'] != null &&
-                  training['reps'] != null &&
-                  training['kgs'] != null)
-              ? Icon(Icons.check,
-                  color: Colors.green)
-              : Icon(Icons.settings,
-                  color: Colors.white70),
-          onTap: () {
-            // トレーニングのコンテンツのモーダルを表示する
-            var is_setting = true;
-            showTrainingContentModal(
-                context, training, is_setting);
-          },
-        )
-      ]
-    )),
-  );
+  Widget buildTrainingListTile(String training_id, Map training) => Card(
+        child: Slidable(
+            endActionPane: ActionPane(motion: const BehindMotion(), children: [
+              SlidableAction(
+                  backgroundColor: Colors.red,
+                  borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(10),
+                      bottomRight: Radius.circular(10)),
+                  icon: Icons.delete,
+                  label: '削除',
+                  onPressed: (context) {
+                    print(training_id);
+                    _deleteTrainingDialog(
+                      training_id,
+                      training['training_name'],
+                    );
+                  })
+            ]),
+            child: Column(children: <Widget>[
+              ListTile(
+                leading: CircleAvatar(
+                    foregroundImage: AssetImage("assets/images/chest.png")),
+                title: Text(training['training_name']),
+                trailing: (training['sets'] != null &&
+                        training['reps'] != null &&
+                        training['kgs'] != null)
+                    ? Icon(Icons.check, color: Colors.green)
+                    : Icon(Icons.settings, color: Colors.white70),
+                onTap: () {
+                  // トレーニングのコンテンツのモーダルを表示する
+                  var is_setting = true;
+                  showTrainingContentModal(context, training, is_setting);
+                },
+              )
+            ])),
+      );
 
   // ********************
   //
@@ -549,7 +621,8 @@ class _EditTrainingPlanScreenState extends State<EditTrainingPlanScreen> {
             child: Padding(
               padding: EdgeInsets.all(20),
               child: Column(children: [
-                SizedBox(
+                Container(
+                  margin: EdgeInsets.only(bottom: 15),
                   width: double.infinity,
                   child: Text(
                     'トレーニングを選択',

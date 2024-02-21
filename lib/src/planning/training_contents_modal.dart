@@ -26,12 +26,13 @@ Future<void> _customizeUserTrainings(
       "/api/training_plan/customize_user_trainings");
 
   Map<String, String> headers = {'content-type': 'application/json'};
-  String body = json.encode({
+  Map update_data = {
     'user_training_id': user_training_id,
     'sets': sets_input,
     'reps': reps_input,
     'kgs': kgs_input
-  });
+  };
+  String body = json.encode(update_data);
 
   // POSTリクエストを投げる
   try {
@@ -43,13 +44,8 @@ Future<void> _customizeUserTrainings(
 
     if (jsonResponse['statusCode'] == 200) {
       //リクエストに失敗した場合はエラーメッセージを表示
-      AlertDialogTemplate(context, '更新しました。', jsonResponse['statusMessage']);
+      await AlertDialogTemplate(context, '更新しました。', jsonResponse['statusMessage']);
 
-      // setState(() {
-      //   trainings_registered.add(jsonResponse['add_data']);
-      //   //リクエストに失敗した場合はエラーメッセージを表示
-      //   AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
-      // });
     } else {
       //リクエストに失敗した場合はエラーメッセージを表示
       AlertDialogTemplate(

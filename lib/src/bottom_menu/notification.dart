@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
@@ -9,15 +10,16 @@ import 'package:lottie/lottie.dart';
 import '../firebase/user_info.dart';
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
+import '../common/provider.dart';
 
-class NotificationScreen extends StatefulWidget {
+class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
 
   @override
-  State<NotificationScreen> createState() => _NortificationScreenState();
+  _NortificationScreenState createState() => _NortificationScreenState();
 }
 
-class _NortificationScreenState extends State<NotificationScreen>
+class _NortificationScreenState extends ConsumerState<NotificationScreen>
     with SingleTickerProviderStateMixin {
   // お知らせページのイニシャライザ設定
   bool _loading = false;
