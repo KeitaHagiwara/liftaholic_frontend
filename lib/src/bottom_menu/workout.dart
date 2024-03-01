@@ -226,15 +226,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                                 ListTile(
                                                     dense: true,
                                                     title: Text('・' +
-                                                        _trainings_registered[
-                                                                List.from(_trainings_registered.keys)[index]]
+                                                        _trainings_registered[List.from(
+                                                                _trainings_registered
+                                                                    .keys)[index]]
                                                             ['training_name']),
                                                     onTap: () {
                                                       var is_setting = false;
+                                                      var user_training_id = List.from(_trainings_registered.keys)[index];
                                                       showTrainingContentModal(
                                                           context,
-                                                          _trainings_registered[
-                                                              List.from(_trainings_registered.keys)[index]],
+                                                          user_training_id,
+                                                          _trainings_registered[user_training_id],
                                                           is_setting);
                                                     })
                                               ]);
@@ -271,7 +273,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                                 '選択したトレーニングプランを開始します。よろしいですか？');
                                           }),
                               ]))
-                : ExecWorkoutScreen() // ワークアウト実施中の場合
+                : ExecWorkoutMenuScreen() // ワークアウト実施中の場合
         );
   }
 }

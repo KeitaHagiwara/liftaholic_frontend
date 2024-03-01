@@ -27,6 +27,7 @@ dependencies:
   flutter_slidable: ^3.0.1
   flutter_riverpod: ^2.4.10
   riverpod: ^2.5.0
+  flutter_spinbox: ^0.13.1
 
 dev_dependencies:
   flutter_test:

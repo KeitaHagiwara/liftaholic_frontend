@@ -32,6 +32,7 @@ Future<void> _customizeUserTrainings(
     'reps': reps_input,
     'kgs': kgs_input
   };
+  print(update_data);
   String body = json.encode(update_data);
 
   // POSTリクエストを投げる
@@ -44,8 +45,8 @@ Future<void> _customizeUserTrainings(
 
     if (jsonResponse['statusCode'] == 200) {
       //リクエストに失敗した場合はエラーメッセージを表示
-      await AlertDialogTemplate(context, '更新しました。', jsonResponse['statusMessage']);
-
+      await AlertDialogTemplate(
+          context, '更新しました。', jsonResponse['statusMessage']);
     } else {
       //リクエストに失敗した場合はエラーメッセージを表示
       AlertDialogTemplate(
@@ -58,7 +59,7 @@ Future<void> _customizeUserTrainings(
 }
 
 // トレーニング内容のモーダルを表示する
-void showTrainingContentModal(context, Map training, bool is_setting) {
+void showTrainingContentModal(context, String user_training_id, Map training, bool is_setting) {
   // テキストフィールドのコントローラーを設定する
   final TextEditingController _controllerSets = training['sets'] == null
       ? TextEditingController()
@@ -191,11 +192,12 @@ void showTrainingContentModal(context, Map training, bool is_setting) {
                     Container(
                       margin: const EdgeInsets.only(left: 20),
                       child: TextButton(
-                        style: TextButton.styleFrom(backgroundColor: Colors.blue),
+                        style:
+                            TextButton.styleFrom(backgroundColor: Colors.blue),
                         onPressed: () {
                           _customizeUserTrainings(
                               context,
-                              training['user_training_id'],
+                              user_training_id,
                               _controllerSets.text,
                               _controllerReps.text,
                               _controllerKgs.text);

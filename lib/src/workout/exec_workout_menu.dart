@@ -9,15 +9,16 @@ import '../common/dialogs.dart';
 import '../common/error_messages.dart';
 import '../common/provider.dart';
 import '../planning/training_contents_modal.dart';
+import './exec_workout.dart';
 
-class ExecWorkoutScreen extends ConsumerStatefulWidget {
-  const ExecWorkoutScreen({Key? key}) : super(key: key);
+class ExecWorkoutMenuScreen extends ConsumerStatefulWidget {
+  const ExecWorkoutMenuScreen({Key? key}) : super(key: key);
 
   @override
-  _ExecWorkoutScreenState createState() => _ExecWorkoutScreenState();
+  _ExecWorkoutMenuScreenState createState() => _ExecWorkoutMenuScreenState();
 }
 
-class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
+class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
   // イニシャライザ設定
   bool _loading = false;
 
@@ -121,6 +122,15 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                 int.parse(user_training_id);
             // モーダルを閉じる
             Navigator.of(context).pop();
+            // ワークアウトメイン画面に遷移する
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) {
+                  // 遷移先の画面としてリスト追加画面を指定
+                  return ExecWorkoutScreen(user_training_id: user_training_id);
+                }
+              )
+            );
           },
         );
         ConfirmDialogTemplate(
@@ -199,13 +209,16 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                                       },
                                     ),
                                     onTap: () {
-                                      var is_setting = true;
-                                      showTrainingContentModal(
-                                          context,
-                                          _trainings_registered[List.from(
-                                              _trainings_registered
-                                                  .keys)[index]],
-                                          is_setting);
+                                      var tgt_training_id = List.from(
+                                            _trainings_registered.keys)[index];
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) {
+                                            // 遷移先の画面としてリスト追加画面を指定
+                                            return ExecWorkoutScreen(user_training_id: tgt_training_id);
+                                          }
+                                        )
+                                      );
                                     })
                               ]);
                             })),

@@ -187,8 +187,8 @@ class _EditTrainingPlanScreenState
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
-          _trainings_registered[jsonResponse['add_user_training_id'][0].toString()] =
-              jsonResponse['add_data'];
+          _trainings_registered[jsonResponse['add_user_training_id'][0]
+              .toString()] = jsonResponse['add_data'];
           //リクエストに失敗した場合はエラーメッセージを表示
           AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
         });
@@ -552,7 +552,7 @@ class _EditTrainingPlanScreenState
   // トレーニングリストタイル
   //
   // ********************
-  Widget buildTrainingListTile(String training_id, Map training) => Card(
+  Widget buildTrainingListTile(String user_training_id, Map training) => Card(
         child: Slidable(
             endActionPane: ActionPane(motion: const BehindMotion(), children: [
               SlidableAction(
@@ -563,9 +563,8 @@ class _EditTrainingPlanScreenState
                   icon: Icons.delete,
                   label: '削除',
                   onPressed: (context) {
-                    print(training_id);
                     _deleteTrainingDialog(
-                      training_id,
+                      user_training_id,
                       training['training_name'],
                     );
                   })
@@ -583,7 +582,8 @@ class _EditTrainingPlanScreenState
                 onTap: () {
                   // トレーニングのコンテンツのモーダルを表示する
                   var is_setting = true;
-                  showTrainingContentModal(context, training, is_setting);
+                  showTrainingContentModal(
+                      context, user_training_id, training, is_setting);
                 },
               )
             ])),
@@ -609,6 +609,8 @@ class _EditTrainingPlanScreenState
     //       'event_comment': ''
     //     },
     // };
+
+    print(trainings);
 
     showModalBottomSheet(
       isScrollControlled: true,
@@ -701,8 +703,10 @@ class _EditTrainingPlanScreenState
                                 onTap: () {
                                   // トレーニングのコンテンツのモーダルを表示する
                                   var is_setting = false;
+                                  var user_training_id = null;
                                   showTrainingContentModal(
                                       context,
+                                      user_training_id,
                                       List.from(List.from(trainings.values)[i]
                                           .values)[i_c1],
                                       is_setting);
