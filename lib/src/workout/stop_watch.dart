@@ -77,6 +77,13 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
           callbackButton,
           'リセット',
           'トレーニングは実施中です。タイマーをリセットしてもよろしいですか？');
+    } else {
+      timer.cancel();
+      stopwatch.reset();
+      setState(() {
+        timeString = "00:00";
+      });
+      stopwatch.stop();
     }
   }
 
