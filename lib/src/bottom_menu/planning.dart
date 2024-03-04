@@ -202,14 +202,26 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
   }
 
   // 削除したトレーニングプランを画面更新を行う
-  void _deleteRegisteredPlan(deleted_plan_id) {
-    for (int idx = 0; idx < _registeredPlanList.length; idx++) {
-      if (_registeredPlanList[idx]['plan_id'] == deleted_plan_id) {
-        setState(() {
-          _registeredPlanList.removeAt(idx);
-        });
+  void _deleteRegisteredPlan(training_plan_id) async {
+    final deleted_plan_id = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) {
+        // 遷移先の画面としてリスト追加画面を指定
+        return EditTrainingPlanScreen(
+            training_plan_id: training_plan_id.toString(),
+            registered_plan_list: _registeredPlanList);
+      }),
+    );
+    if (deleted_plan_id != null) {
+      for (int idx = 0; idx < _registeredPlanList.length; idx++) {
+        if (_registeredPlanList[idx]['plan_id'] == deleted_plan_id) {
+          setState(() {
+            _registeredPlanList.removeAt(idx);
+          });
+        }
       }
     }
+    // トレーニングプラン編集画面から戻ってきた場合は画面をリロードする
+    _getTrainingPlans(uid);
   }
 
   // ********************
@@ -312,7 +324,9 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                                                 }),
                                               );
                                               if (newListText != null) {
+                                                // トレーニングプランに追加する
                                                 _createNewPlan(newListText);
+                                                _deleteRegisteredPlan(_registeredPlanList[index]['plan_id']);
                                               }
                                             },
                                             child: Container(
@@ -321,30 +335,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                                                     color: Colors.blue)))
                                         : InkWell(
                                             onTap: () async {
-                                              // "push"で新規画面に遷移
-                                              // リスト追加画面から渡される値を受け取る
-                                              final deleted_plan_id =
-                                                  await Navigator.of(context)
-                                                      .push(
-                                                MaterialPageRoute(
-                                                    builder: (context) {
-                                                  // 遷移先の画面としてリスト追加画面を指定
-                                                  return EditTrainingPlanScreen(
-                                                      training_plan_id:
-                                                          _registeredPlanList[
-                                                                      index]
-                                                                  ['plan_id']
-                                                              .toString(),
-                                                      registered_plan_list:
-                                                          _registeredPlanList);
-                                                }),
-                                              );
-                                              if (deleted_plan_id != null) {
-                                                _deleteRegisteredPlan(
-                                                    deleted_plan_id);
-                                              }
-                                              // トレーニングプラン編集画面から戻ってきた場合は画面をリロードする
-                                              _getTrainingPlans(uid);
+                                              _deleteRegisteredPlan(_registeredPlanList[index]['plan_id']);
                                             },
                                             child: Container(
                                               width: 180,

@@ -49,9 +49,6 @@ class _EditTrainingPlanScreenState
 
   bool _loading = false;
 
-  // トレーニングプランを作成するときに使用する辞書
-  Map<String, String> _createPlanDict = {};
-
   Map _trainings_registered = {};
 
   // Map _trainings_registered = {
@@ -226,7 +223,7 @@ class _EditTrainingPlanScreenState
         dotenv.get('API_HOST') +
         ":" +
         dotenv.get('API_PORT') +
-        "/api/training_plan/delete_training_plans/" +
+        "/api/training_plan/delete_training_plan/" +
         training_plan_id.toString());
 
     // POSTリクエストを投げる
@@ -363,9 +360,6 @@ class _EditTrainingPlanScreenState
         );
       },
     );
-
-    // ConfirmDialogTemplate(context, callbackButton, 'プラン削除',
-    //     'トレーニングプラン「' + training_plan_name + '」を削除します。よろしいですか？');
   }
 
   @override
@@ -644,7 +638,6 @@ class _EditTrainingPlanScreenState
     // };
 
     print(trainings);
-
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -731,7 +724,6 @@ class _EditTrainingPlanScreenState
                                           var training_no = List.from(
                                               List.from(trainings.values)[i]
                                                   .keys)[i_c1];
-
                                           // プランにトレーニングメニューを追加する
                                           _addTrainingMenu(
                                               plan_id, training_no);
@@ -743,12 +735,10 @@ class _EditTrainingPlanScreenState
                                         .values)[i_c1]['training_name']),
                                 onTap: () {
                                   // トレーニングのコンテンツのモーダルを表示する
-                                  print(List.from(List.from(trainings.values)[i].values)[i_c1]);
                                   showTrainingContentModal(
                                       context,
                                       List.from(List.from(trainings.values)[i]
-                                          .values)[i_c1]
-                                      );
+                                          .values)[i_c1]);
                                 },
                               ),
                             )

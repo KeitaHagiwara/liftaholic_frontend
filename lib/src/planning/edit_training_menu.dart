@@ -49,7 +49,6 @@ class _EditTrainingMenuScreenState
   // ********************
   // サーバーアクセス処理
   // ********************
-
   // トレーニングメニューの回数を設定する
   Future<void> _customizeUserTrainings(
       context, user_training_id, sets_input, reps_input, kgs_input) async {
@@ -83,6 +82,11 @@ class _EditTrainingMenuScreenState
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (jsonResponse['statusCode'] == 200) {
+        setState(() {
+          _training['sets'] = _sets;
+          _training['kgs'] = _kgs;
+          _training['reps'] = _reps;
+        });
         //リクエストに失敗した場合はエラーメッセージを表示
         await AlertDialogTemplate(
             context, '更新しました。', jsonResponse['statusMessage']);
@@ -150,8 +154,7 @@ class _EditTrainingMenuScreenState
           TextButton(
             child: Text('詳細'),
             onPressed: () {
-              showTrainingContentModal(
-                  context, _training);
+              showTrainingContentModal(context, _training);
             },
           ),
           const SizedBox(height: 15),
