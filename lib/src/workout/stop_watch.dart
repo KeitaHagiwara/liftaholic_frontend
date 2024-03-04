@@ -14,7 +14,12 @@ import '../common/dialogs.dart';
 import '../common/error_messages.dart';
 
 class StopWatchScreen extends ConsumerStatefulWidget {
-  const StopWatchScreen({Key? key}) : super(key: key);
+  const StopWatchScreen(
+      {Key? key, required this.user_training_menu, required this.index})
+      : super(key: key);
+
+  final List user_training_menu;
+  final int index;
 
   @override
   _StopWatchScreenState createState() => _StopWatchScreenState();
@@ -24,6 +29,9 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
   String timeString = "00:00";
   Stopwatch stopwatch = Stopwatch();
   late Timer timer;
+
+  late List _user_training_menu;
+  late int _menu_index;
 
   void start() {
     stopwatch.start();
@@ -73,10 +81,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
         },
       );
       ConfirmDialogTemplate(
-          context,
-          callbackButton,
-          'リセット',
-          'トレーニングは実施中です。タイマーをリセットしてもよろしいですか？');
+          context, callbackButton, 'リセット', 'トレーニングは実施中です。タイマーをリセットしてもよろしいですか？');
     } else {
       timer.cancel();
       stopwatch.reset();
@@ -88,14 +93,35 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    _user_training_menu = widget.user_training_menu;
+    _menu_index = widget.index;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 600,
+      height: 650,
       width: double.infinity,
       child: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(5),
           child: Column(children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                  icon: Icon(Icons.cancel),
+                  onPressed: () {
+                    if (stopwatch.isRunning) {
+                      AlertDialogTemplate(context, CFM_MSG_TITLE,
+                          'トレーニング実施中です。タイマーを停止してから閉じてください。');
+                    } else {
+                      Navigator.pop(context); // Close the sheet.
+                    }
+                  }),
+            ),
             SizedBox(
               width: double.infinity,
               child: Text(
@@ -181,72 +207,73 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                 ],
               ),
             ),
-            Container(
-              padding: EdgeInsets.only(left: 15),
-              child: SizedBox(
-                child: Text(
-                  "kgs",
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontWeight: FontWeight.bold)
-                      .copyWith(color: Colors.white70, fontSize: 18.0),
-                ),
-              ),
-              width: double.infinity,
-            ),
-            SpinBox(
-              min: 1,
-              max: 500,
-              value: 30,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.zero,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.transparent,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 70, vertical: 10),
+              child: SpinBox(
+                min: 0.0,
+                max: 500.0,
+                value: _user_training_menu[_menu_index]['kgs'].toDouble(),
+                decimals: 2,
+                step: 0.25,
+                decoration: InputDecoration(
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  floatingLabelAlignment: FloatingLabelAlignment.center,
+                  labelText: 'kgs',
+                  labelStyle: TextStyle(
+                    fontSize: 24,
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.white70,
+                    ),
                   ),
                 ),
+                onChanged: (value) {
+                  _user_training_menu[_menu_index]['kgs'] = value;
+                },
               ),
-              onChanged: (value) => print(value),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: EdgeInsets.only(left: 15),
-              child: SizedBox(
-                child: Text(
-                  "reps",
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontWeight: FontWeight.bold)
-                      .copyWith(color: Colors.white70, fontSize: 18.0),
-                ),
-              ),
-              width: double.infinity,
-            ),
-            SpinBox(
-              min: 1,
-              max: 500,
-              value: 30,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.zero,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.transparent,
+            const SizedBox(height: 10),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 70, vertical: 10),
+              child: SpinBox(
+                min: 1,
+                max: 500,
+                value: _user_training_menu[_menu_index]['reps'].toDouble(),
+                decoration: InputDecoration(
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  floatingLabelAlignment: FloatingLabelAlignment.center,
+                  labelText: 'reps',
+                  labelStyle: TextStyle(
+                    fontSize: 24,
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.white70,
+                    ),
                   ),
                 ),
+                onChanged: (value) {
+                  _user_training_menu[_menu_index]['reps'] = value.toInt();
+                },
               ),
-              onChanged: (value) => print(value),
             ),
-            TextButton(
-              style: TextButton.styleFrom(backgroundColor: Colors.grey),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              child: Text('セット終了', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () {
-                if (stopwatch.isRunning){
-                  AlertDialogTemplate(context, CFM_MSG_TITLE, 'トレーニング実施中です。タイマーを停止してから閉じてください。');
-                } else {
-                  Navigator.pop(context); // Close the sheet.
-                }
+                // リストの更新処理を行う
+                _user_training_menu[_menu_index]['time'] = timeString;
+                _user_training_menu[_menu_index]['is_completed'] = true;
+                print(_user_training_menu);
+                // モーダルを閉じる
+                Navigator.of(context).pop();
               },
-              child: Text("閉じる",
-                  style:
-                      TextStyle(color: Colors.white)), // Add the button text.
             ),
+            const SizedBox(height: 5),
           ]),
         ),
       ),

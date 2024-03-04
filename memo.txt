@@ -1,0 +1,2 @@
+・BottomNavigationBarを固定する
+  - https://qiita.com/0maru/items/8e81ed5f0ddd5bae9658

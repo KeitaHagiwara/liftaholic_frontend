@@ -3,10 +3,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_spinbox/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
+
+// Paddingの定数を設定する
+const padding_vertical = 10;
+const padding_horizontal = 70;
 
 // ----------------------------
 // トレーニングメニューの回数を設定する
@@ -32,7 +37,6 @@ Future<void> _customizeUserTrainings(
     'reps': reps_input,
     'kgs': kgs_input
   };
-  print(update_data);
   String body = json.encode(update_data);
 
   // POSTリクエストを投げる
@@ -59,17 +63,8 @@ Future<void> _customizeUserTrainings(
 }
 
 // トレーニング内容のモーダルを表示する
-void showTrainingContentModal(context, String user_training_id, Map training, bool is_setting) {
-  // テキストフィールドのコントローラーを設定する
-  final TextEditingController _controllerSets = training['sets'] == null
-      ? TextEditingController()
-      : TextEditingController(text: training['sets'].toString());
-  final TextEditingController _controllerReps = training['reps'] == null
-      ? TextEditingController()
-      : TextEditingController(text: training['reps'].toString());
-  final TextEditingController _controllerKgs = training['kgs'] == null
-      ? TextEditingController()
-      : TextEditingController(text: training['kgs'].toString());
+void showTrainingContentModal(
+    context, Map training) {
 
   showModalBottomSheet(
     isScrollControlled: true,
@@ -80,8 +75,17 @@ void showTrainingContentModal(context, String user_training_id, Map training, bo
         width: double.infinity,
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 40, 20, 40),
+            padding: EdgeInsets.all(5),
             child: Column(children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                    icon: Icon(Icons.cancel),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the sheet.
+                    }),
+              ),
+              // トレーニングタイトル
               SizedBox(
                 width: double.infinity,
                 child: Text(
@@ -91,135 +95,14 @@ void showTrainingContentModal(context, String user_training_id, Map training, bo
                       .copyWith(color: Colors.white70, fontSize: 18.0),
                 ),
               ),
-              if (is_setting) ...[
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    // --------
-                    // sets
-                    // --------
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.all(18.0),
-                        child: TextFormField(
-                          controller: _controllerSets,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(2),
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          textAlign: TextAlign.center,
-                          // decoration: InputDecoration(
-                          //   enabledBorder: OutlineInputBorder(
-                          //     borderSide: BorderSide(color: Colors.blue)
-                          //   ),
-                          //   focusedBorder: OutlineInputBorder(
-                          //     borderSide: BorderSide(color: Colors.orange)
-                          //   )
-                          // ),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      "sets ",
-                      textAlign: TextAlign.center,
-                      style: TextStyle()
-                          .copyWith(color: Colors.white70, fontSize: 18.0),
-                    ),
-                    // --------
-                    // reps
-                    // --------
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextFormField(
-                          controller: _controllerReps,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(2),
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          textAlign: TextAlign.center,
-                          // decoration: InputDecoration(
-                          //   enabledBorder: OutlineInputBorder(
-                          //     borderSide: BorderSide(color: Colors.blue)
-                          //   ),
-                          //   focusedBorder: OutlineInputBorder(
-                          //     borderSide: BorderSide(color: Colors.orange)
-                          //   )
-                          // ),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      "reps",
-                      textAlign: TextAlign.center,
-                      style: TextStyle()
-                          .copyWith(color: Colors.white70, fontSize: 18.0),
-                    ),
-                    // --------
-                    // kgs
-                    // --------
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextFormField(
-                          controller: _controllerKgs,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(3),
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          textAlign: TextAlign.center,
-                          // decoration: InputDecoration(
-                          //   enabledBorder: OutlineInputBorder(
-                          //     borderSide: BorderSide(color: Colors.blue)
-                          //   ),
-                          //   focusedBorder: OutlineInputBorder(
-                          //     borderSide: BorderSide(color: Colors.orange)
-                          //   )
-                          // ),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      "kgs",
-                      textAlign: TextAlign.center,
-                      style: TextStyle()
-                          .copyWith(color: Colors.white70, fontSize: 18.0),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(left: 20),
-                      child: TextButton(
-                        style:
-                            TextButton.styleFrom(backgroundColor: Colors.blue),
-                        onPressed: () {
-                          _customizeUserTrainings(
-                              context,
-                              user_training_id,
-                              _controllerSets.text,
-                              _controllerReps.text,
-                              _controllerKgs.text);
-                        },
-                        child: Text("更新",
-                            style: TextStyle(
-                                color: Colors.white)), // Add the button text.
-                      ),
-                    ),
-
-                    ///TODO add to db and previous added move
-                  ],
+              // トレーニング説明文
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  training['description'],
+                  // style: TextStyle(fontWeight: FontWeight.bold)
+                  //     .copyWith(color: Colors.white70, fontSize: 18.0),
                 ),
-              ],
-              TextButton(
-                style: TextButton.styleFrom(backgroundColor: Colors.grey),
-                onPressed: () {
-                  Navigator.pop(context); // Close the sheet.
-                },
-                child: Text("閉じる",
-                    style:
-                        TextStyle(color: Colors.white)), // Add the button text.
               ),
             ]),
           ),

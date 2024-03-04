@@ -1,12 +1,16 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
+import '../common/progressbar_circle.dart';
 import '../common/provider.dart';
 import '../planning/training_contents_modal.dart';
 import './exec_workout.dart';
@@ -123,14 +127,10 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
             // モーダルを閉じる
             Navigator.of(context).pop();
             // ワークアウトメイン画面に遷移する
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) {
-                  // 遷移先の画面としてリスト追加画面を指定
-                  return ExecWorkoutScreen(user_training_id: user_training_id);
-                }
-              )
-            );
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+              // 遷移先の画面としてリスト追加画面を指定
+              return ExecWorkoutScreen(user_training_id: user_training_id);
+            }));
           },
         );
         ConfirmDialogTemplate(
@@ -139,7 +139,8 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
         Widget callbackButton = TextButton(
           child: Text("中断"),
           onPressed: () {
-            _trainings_registered[ref.read(execMenuIdProvider).toString()]['is_doing'] = false;
+            _trainings_registered[ref.read(execMenuIdProvider).toString()]
+                ['is_doing'] = false;
             _trainings_registered[user_training_id]['is_doing'] = true;
             setState(() {
               _trainings_registered;
@@ -152,7 +153,14 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
           },
         );
         ConfirmDialogTemplate(
-            context, callbackButton, "中断", _trainings_registered[ref.read(execMenuIdProvider).toString()]['training_name'] + 'を中断して' + training_name + "を開始します。よろしいですか？");
+            context,
+            callbackButton,
+            "中断",
+            _trainings_registered[ref.read(execMenuIdProvider).toString()]
+                    ['training_name'] +
+                'を中断して' +
+                training_name +
+                "を開始します。よろしいですか？");
       }
     }
   }
@@ -194,31 +202,31 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                     title: Text(_trainings_registered[List.from(
                                             _trainings_registered.keys)[index]]
                                         ['training_name']),
-                                    trailing: ElevatedButton(
-                                      child: !_trainings_registered[List.from(
-                                              _trainings_registered
-                                                  .keys)[index]]['is_doing']
-                                          ? Icon(Icons.play_arrow,
-                                              color: Colors.green)
-                                          : Icon(Icons.pause,
-                                              color: Colors.yellow),
-                                      onPressed: () {
-                                        var tgt_training_id = List.from(
-                                            _trainings_registered.keys)[index];
-                                        _startWorkout(tgt_training_id);
-                                      },
-                                    ),
+                                    leading:
+                                        ProgressbarCircleScreen(progress: 75),
+                                    // trailing: ElevatedButton(
+                                    //   child: !_trainings_registered[List.from(
+                                    //           _trainings_registered
+                                    //               .keys)[index]]['is_doing']
+                                    //       ? Icon(Icons.play_arrow,
+                                    //           color: Colors.green)
+                                    //       : Icon(Icons.pause,
+                                    //           color: Colors.yellow),
+                                    //   onPressed: () {
+                                    //     var tgt_training_id = List.from(
+                                    //         _trainings_registered.keys)[index];
+                                    //     _startWorkout(tgt_training_id);
+                                    //   },
+                                    // ),
                                     onTap: () {
                                       var tgt_training_id = List.from(
-                                            _trainings_registered.keys)[index];
+                                          _trainings_registered.keys)[index];
                                       Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) {
-                                            // 遷移先の画面としてリスト追加画面を指定
-                                            return ExecWorkoutScreen(user_training_id: tgt_training_id);
-                                          }
-                                        )
-                                      );
+                                          MaterialPageRoute(builder: (context) {
+                                        // 遷移先の画面としてリスト追加画面を指定
+                                        return ExecWorkoutScreen(
+                                            user_training_id: tgt_training_id);
+                                      }));
                                     })
                               ]);
                             })),

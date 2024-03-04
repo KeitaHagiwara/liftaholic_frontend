@@ -31,6 +31,9 @@ final workoutEndTimeProvider = StateProvider<DateTime>((ref) => DateTime.now());
 // 実施中のトレーニングメニューIDのStateProvider
 final execMenuIdProvider = StateProvider<int>((ref) => 0);
 
+// 実施中のトレーニングメニューの連想配列
+final execUserTrainingMenuProvider = StateProvider<Map>((ref) => {});
+
 // お知らせページの情報を格納するためのStateProvider
 final notificationProvider =
     StateProvider<Map>((ref) => {'あなた宛': [], 'ニュース': []});

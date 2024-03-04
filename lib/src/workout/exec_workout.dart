@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 
 // import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,7 +37,9 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
 
   Map<String, dynamic> _training = {};
   String _training_name = '';
-  Map<String, dynamic> _user_training_menu = {};
+  double _kgs_default = 0.0;
+  int _reps_default = 0;
+  List _user_training_menu = [];
 
   String timeString = "00:00:00";
   Stopwatch stopwatch = Stopwatch();
@@ -74,7 +77,11 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
           // スピナー非表示
           _training = jsonResponse['training'];
           _training_name = _training['training_name'];
+          _kgs_default = _training['kgs_default'];
+          _reps_default = _training['reps_default'];
           _user_training_menu = jsonResponse['user_training_menu'];
+          print(_training);
+          print(_user_training_menu);
         });
       } else {
         //リクエストに失敗した場合はエラーメッセージを表示
@@ -107,7 +114,6 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
       appBar: AppBar(
         title: Text(
           _training_name,
-          // _user_training_menu['training_name'],
           textAlign: TextAlign.center,
           style: TextStyle(fontWeight: FontWeight.bold)
               .copyWith(color: Colors.white70, fontSize: 18.0),
@@ -127,9 +133,8 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                           child: Text('説明を見る'),
                           onPressed: () {
                             // トレーニングのコンテンツのモーダルを表示する
-                            var is_setting = false;
-                            showTrainingContentModal(context, user_training_id,
-                                _training, is_setting);
+                            showTrainingContentModal(context,
+                                _training);
                           })),
                   Flexible(
                       child: _user_training_menu.length == 0
@@ -147,15 +152,26 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                                         dense: true,
                                         title: Text(
                                             (index + 1).toString() + 'セット目'),
+                                        leading: Icon(Icons.task_alt,
+                                            color: _user_training_menu[index]
+                                                    ['is_completed']
+                                                ? Colors.green
+                                                : Colors.grey),
+                                        trailing: _user_training_menu[index]
+                                                ['is_completed']
+                                            ? Text(_user_training_menu[index]
+                                                        ['kgs']
+                                                    .toString() +
+                                                'kgs  ' +
+                                                _user_training_menu[index]
+                                                        ['reps']
+                                                    .toString() +
+                                                'reps\n' +
+                                                _user_training_menu[index]
+                                                    ['time'])
+                                            : Text(''),
                                         onTap: () {
-                                          var set_order = index + 1;
-                                          startTrainigModal(
-                                              context,
-                                              set_order,
-                                              _user_training_menu[
-                                                  set_order.toString()]['reps'],
-                                              _user_training_menu[
-                                                  set_order.toString()]['kgs']);
+                                          startTrainigModal(context, index);
                                         })
                                   ],
                                 ));
@@ -171,9 +187,12 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                       // ボタンをクリックした時の処理
                       onPressed: () {
                         setState(() {
-                          print(_user_training_menu.length);
-                          _user_training_menu[(_user_training_menu.length + 1)
-                              .toString()] = {'reps': 3, 'kgs': 20};
+                          _user_training_menu.add({
+                            'reps': _reps_default,
+                            'kgs': _kgs_default,
+                            'time': '00:00',
+                            'is_completed': false
+                          });
                         });
                       },
                       child:
@@ -194,7 +213,8 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                       onPressed: () {
                         print('done!');
                       },
-                      child: Text('完了', style: TextStyle(color: Colors.white)),
+                      child:
+                          Text('種目完了', style: TextStyle(color: Colors.white)),
                       style:
                           ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     ),
@@ -205,14 +225,15 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
     );
   }
 
-  void startTrainigModal(context, int set_order, int reps, int kgs) {
+  void startTrainigModal(context, int index) {
     showModalBottomSheet(
       isScrollControlled: true,
       isDismissible: false, // 背景押下で閉じないようにする
       enableDrag: false, // ドラッグで閉じないようにする
       context: context,
       builder: (BuildContext context) {
-        return StopWatchScreen();
+        return StopWatchScreen(
+            user_training_menu: _user_training_menu, index: index);
       },
     );
   }

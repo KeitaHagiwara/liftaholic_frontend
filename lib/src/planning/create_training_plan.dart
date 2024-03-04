@@ -9,9 +9,10 @@ import 'package:flutter/material.dart';
 
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
+import '../bottom_menu/planning.dart';
 
 class CreateTrainingPlanScreen extends StatefulWidget {
-  const CreateTrainingPlanScreen({Key? key}) : super(key: key);
+  const CreateTrainingPlanScreen({super.key});
 
   @override
   _CreateTrainingPlanScreenState createState() =>
@@ -175,14 +176,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                                 content: Text('プランタイトルを入力してください。'),
                                 actions: [
                                   TextButton(
-                                    child: Text(
-                                      "OK",
-                                      style:
-                                          TextStyle(fontWeight: FontWeight.bold)
-                                              .copyWith(
-                                                  color: Colors.white70,
-                                                  fontSize: 18.0),
-                                    ),
+                                    child: Text("OK"),
                                     onPressed: () {
                                       Navigator.of(context).pop();
                                     },
@@ -206,8 +200,11 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                           } else {
                             // エラーになった場合はTextFieldのinputの内容が消えてしまうため、初期値を再設定する
                             setState(() {
-                              _plan_name_controller.text = _createPlanDict['training_title'].toString();
-                              _plan_desc_controller.text = _createPlanDict['training_description'].toString();
+                              _plan_name_controller.text =
+                                  _createPlanDict['training_title'].toString();
+                              _plan_desc_controller.text =
+                                  _createPlanDict['training_description']
+                                      .toString();
                             });
                           }
                         }

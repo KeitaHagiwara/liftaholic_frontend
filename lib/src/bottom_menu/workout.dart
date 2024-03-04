@@ -13,7 +13,7 @@ import '../workout/exec_workout_menu.dart';
 import '../planning/training_contents_modal.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
-  const WorkoutScreen({Key? key}) : super(key: key);
+  const WorkoutScreen({super.key});
 
   @override
   _WorkoutScreenState createState() => _WorkoutScreenState();
@@ -231,13 +231,15 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                                                     .keys)[index]]
                                                             ['training_name']),
                                                     onTap: () {
-                                                      var is_setting = false;
-                                                      var user_training_id = List.from(_trainings_registered.keys)[index];
+                                                      var training =
+                                                          _trainings_registered[
+                                                                  List.from(
+                                                                      _trainings_registered
+                                                                          .keys)[index]];
                                                       showTrainingContentModal(
-                                                          context,
-                                                          user_training_id,
-                                                          _trainings_registered[user_training_id],
-                                                          is_setting);
+                                                        context,
+                                                        training
+                                                      );
                                                     })
                                               ]);
                                             })),

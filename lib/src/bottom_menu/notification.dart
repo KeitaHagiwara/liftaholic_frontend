@@ -13,7 +13,7 @@ import '../common/error_messages.dart';
 import '../common/provider.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
-  const NotificationScreen({Key? key}) : super(key: key);
+  const NotificationScreen({super.key});
 
   @override
   _NortificationScreenState createState() => _NortificationScreenState();
@@ -149,73 +149,75 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen>
                           width: double.infinity,
                           child: SingleChildScrollView(
                             child: Padding(
-                              padding: EdgeInsets.all(40),
+                              padding: EdgeInsets.all(5),
                               child: Column(children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                    results[tab.text][index]['title'],
-                                    textAlign: TextAlign.center,
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)
-                                            .copyWith(
-                                                color: Colors.white70,
-                                                fontSize: 18.0),
-                                  ),
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: IconButton(
+                                      icon: Icon(Icons.cancel),
+                                      onPressed: () {
+                                        Navigator.of(context).pop(); // Close the sheet.
+                                      }),
                                 ),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                      results[tab.text][index]['created_at'],
-                                      textAlign: TextAlign.right),
-                                ),
-                                // default: 'https://lottie.host/13f1ca31-c177-4ebc-a64a-28f82a15c786/BmrjCFDPXQ.json',
-                                // custom1 : 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
-                                if (results[tab.text][index]
-                                        ['animation_width'] !=
-                                    null) ...[
-                                  Lottie.network(
-                                    results[tab.text][index]['animation_link'],
-                                    width: double.parse(results[tab.text][index]
-                                        ['animation_width']),
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Padding(
-                                        padding: EdgeInsets.all(0.0),
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    },
-                                  ),
-                                ] else ...[
-                                  Lottie.network(
-                                    results[tab.text][index]['animation_link'],
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Padding(
-                                        padding: EdgeInsets.all(0.0),
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    },
-                                  ),
-                                ],
-
-                                SizedBox(
-                                    width: double.infinity,
-                                    child: Container(
-                                      margin:
-                                          EdgeInsets.fromLTRB(0, 20.0, 0, 40.0),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 40),
+                                  child: Column(children: [
+                                    SizedBox(
+                                      width: double.infinity,
                                       child: Text(
-                                          results[tab.text][index]['detail']),
-                                    )),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                      backgroundColor: Colors.grey),
-                                  onPressed: () {
-                                    Navigator.pop(context); // Close the sheet.
-                                  },
-                                  child: Text("閉じる",
-                                      style: TextStyle(
-                                          color: Colors
-                                              .white)), // Add the button text.
-                                ),
+                                        results[tab.text][index]['title'],
+                                        textAlign: TextAlign.center,
+                                        style:
+                                            TextStyle(fontWeight: FontWeight.bold)
+                                                .copyWith(
+                                                    color: Colors.white70,
+                                                    fontSize: 18.0),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Text(
+                                          results[tab.text][index]['created_at'],
+                                          textAlign: TextAlign.right),
+                                    ),
+                                    // default: 'https://lottie.host/13f1ca31-c177-4ebc-a64a-28f82a15c786/BmrjCFDPXQ.json',
+                                    // custom1 : 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
+                                    if (results[tab.text][index]
+                                            ['animation_width'] !=
+                                        null) ...[
+                                      Lottie.network(
+                                        results[tab.text][index]['animation_link'],
+                                        width: double.parse(results[tab.text][index]
+                                            ['animation_width']),
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Padding(
+                                            padding: EdgeInsets.all(0.0),
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        },
+                                      ),
+                                    ] else ...[
+                                      Lottie.network(
+                                        results[tab.text][index]['animation_link'],
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Padding(
+                                            padding: EdgeInsets.all(0.0),
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Container(
+                                        margin:
+                                            EdgeInsets.fromLTRB(0, 20.0, 0, 40.0),
+                                        child: Text(
+                                            results[tab.text][index]['detail']),
+                                      )
+                                    ),
+                                  ]),
+                                )
                               ]),
                             ),
                           ),

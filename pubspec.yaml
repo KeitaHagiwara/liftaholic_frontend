@@ -28,6 +28,9 @@ dependencies:
   flutter_riverpod: ^2.4.10
   riverpod: ^2.5.0
   flutter_spinbox: ^0.13.1
+  syncfusion_flutter_gauges: ^24.2.8
+  flutter_hooks: ^0.20.5
+  pedantic_mono: ^1.24.0+1
 
 dev_dependencies:
   flutter_test:

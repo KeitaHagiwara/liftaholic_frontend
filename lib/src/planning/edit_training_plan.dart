@@ -13,13 +13,13 @@ import '../common/dialogs.dart';
 import '../common/error_messages.dart';
 import '../common/provider.dart';
 import '../planning/training_contents_modal.dart';
+import '../planning/edit_training_menu.dart';
 
 class EditTrainingPlanScreen extends ConsumerStatefulWidget {
   const EditTrainingPlanScreen(
-      {Key? key,
+      {super.key,
       required this.training_plan_id,
-      required this.registered_plan_list})
-      : super(key: key);
+      required this.registered_plan_list});
 
   // 画面遷移元からのデータを受け取る変数
   final String training_plan_id;
@@ -226,7 +226,7 @@ class _EditTrainingPlanScreenState
         dotenv.get('API_HOST') +
         ":" +
         dotenv.get('API_PORT') +
-        "/api/training_plan/delete_training_plan/" +
+        "/api/training_plan/delete_training_plans/" +
         training_plan_id.toString());
 
     // POSTリクエストを投げる
@@ -286,10 +286,14 @@ class _EditTrainingPlanScreenState
           _trainings_registered.remove(user_training_id);
         });
       }
-      // スピナーを非表示にする
-      _loading = false;
     } catch (e) {
-      print(e);
+      //リクエストに失敗した場合はエラーメッセージを表示
+      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+    } finally {
+      // スピナー非表示
+      setState(() {
+        _loading = false;
+      });
     }
   }
 
@@ -299,20 +303,24 @@ class _EditTrainingPlanScreenState
   void _deleteTrainingDialog(String user_training_id, String training_name) {
     showDialog(
       context: context,
-      builder: (_) {
+      builder: (BuildContext context_modal) {
         return AlertDialog(
-          // title: Text(training_name),
-          content: Text(training_name + "をトレーニングプランから削除します。よろしいですか？"),
+          title: Text('メニュー削除',
+              style: TextStyle(fontWeight: FontWeight.bold)
+                  .copyWith(fontSize: 18)),
+          content: Text('「' + training_name + '」をトレーニングメニューから削除します。よろしいですか？'),
           actions: [
             TextButton(
               child: Text("Cancel"),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                Navigator.of(context_modal).pop();
+              },
             ),
             TextButton(
               child: Text("OK"),
               onPressed: () {
                 _deleteFromUserTrainingMenu(user_training_id);
-                Navigator.of(context).pop();
+                Navigator.of(context_modal).pop();
               },
             ),
           ],
@@ -328,26 +336,36 @@ class _EditTrainingPlanScreenState
       String training_plan_id, String training_plan_name) {
     showDialog(
       context: context,
-      builder: (_) {
+      builder: (BuildContext context_modal) {
         return AlertDialog(
-          // title: Text(training_name),
-          content: Text("トレーニングプラン「" + training_plan_name + "」を削除します。よろしいですか？"),
+          title: Text('プラン削除',
+              style: TextStyle(fontWeight: FontWeight.bold)
+                  .copyWith(fontSize: 18)),
+          content: Text('トレーニングプラン「' + training_plan_name + '」を削除します。よろしいですか？'),
           actions: [
+            // プラン削除キャンセル
             TextButton(
-              child: Text("Cancel"),
-              onPressed: () => Navigator.of(context).pop(),
+              child: Text("キャンセル"),
+              onPressed: () {
+                Navigator.of(context_modal).pop();
+              },
             ),
+            // プラン削除の確認OK
             TextButton(
               child: Text("OK"),
               onPressed: () {
                 _deleteUserTrainingPlan(training_plan_id);
-                Navigator.of(context).pop();
+                // 確認モーダルを削除する
+                Navigator.of(context_modal).pop();
               },
             ),
           ],
         );
       },
     );
+
+    // ConfirmDialogTemplate(context, callbackButton, 'プラン削除',
+    //     'トレーニングプラン「' + training_plan_name + '」を削除します。よろしいですか？');
   }
 
   @override
@@ -375,7 +393,7 @@ class _EditTrainingPlanScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'トレーニングプラン編集',
+          'プラン編集',
           textAlign: TextAlign.center,
           style: TextStyle(fontWeight: FontWeight.bold)
               .copyWith(color: Colors.white70, fontSize: 18.0),
@@ -429,6 +447,13 @@ class _EditTrainingPlanScreenState
                                             .state = int.parse(training_plan_id);
                                         // モーダルを閉じる
                                         Navigator.of(context).pop();
+                                        // // ワークアウトメイン画面に遷移する
+                                        // Navigator.of(context).push(
+                                        //     MaterialPageRoute(
+                                        //         builder: (context) {
+                                        //   // 遷移先の画面としてリスト追加画面を指定
+                                        //   return ExecWorkoutMenuScreen();
+                                        // }));
                                       },
                                     );
                                     ConfirmDialogTemplate(
@@ -461,14 +486,17 @@ class _EditTrainingPlanScreenState
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    child: Text(
-                      training_plan_description,
-                      style: TextStyle()
-                          .copyWith(color: Colors.white70, fontSize: 12.0),
+                  // トレーニングプランの説明文を記載する
+                  if (training_plan_description != '') ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      child: Text(
+                        training_plan_description,
+                        style: TextStyle()
+                            .copyWith(color: Colors.white70, fontSize: 12.0),
+                      ),
                     ),
-                  ),
+                  ],
                   // トレーニングプランに設定されているトレーニング一覧
                   const SizedBox(height: 8),
                   Flexible(
@@ -536,6 +564,7 @@ class _EditTrainingPlanScreenState
                         backgroundColor: Colors.red, // background
                       ),
                       onPressed: () {
+                        // Navigator.of(context).pop();
                         _deleteTrainingPlanDialog(
                             training_plan_id, training_plan_name);
                       },
@@ -580,10 +609,14 @@ class _EditTrainingPlanScreenState
                     ? Icon(Icons.check, color: Colors.green)
                     : Icon(Icons.settings, color: Colors.white70),
                 onTap: () {
-                  // トレーニングのコンテンツのモーダルを表示する
-                  var is_setting = true;
-                  showTrainingContentModal(
-                      context, user_training_id, training, is_setting);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) {
+                      // 遷移先の画面としてリスト追加画面を指定
+                      return EditTrainingMenuScreen(
+                          user_training_id: user_training_id.toString(),
+                          training: training);
+                    }),
+                  );
                 },
               )
             ])),
@@ -621,8 +654,16 @@ class _EditTrainingPlanScreenState
           width: double.infinity,
           child: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(5),
               child: Column(children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                      icon: Icon(Icons.cancel),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Close the sheet.
+                      }),
+                ),
                 Container(
                   margin: EdgeInsets.only(bottom: 15),
                   width: double.infinity,
@@ -702,14 +743,12 @@ class _EditTrainingPlanScreenState
                                         .values)[i_c1]['training_name']),
                                 onTap: () {
                                   // トレーニングのコンテンツのモーダルを表示する
-                                  var is_setting = false;
-                                  var user_training_id = null;
+                                  print(List.from(List.from(trainings.values)[i].values)[i_c1]);
                                   showTrainingContentModal(
                                       context,
-                                      user_training_id,
                                       List.from(List.from(trainings.values)[i]
-                                          .values)[i_c1],
-                                      is_setting);
+                                          .values)[i_c1]
+                                      );
                                 },
                               ),
                             )
@@ -719,14 +758,6 @@ class _EditTrainingPlanScreenState
                     }
                   ],
                 )),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close the sheet.
-                  },
-                  child: Text("閉じる",
-                      style: TextStyle(
-                          color: Colors.white)), // Add the button text.
-                ),
               ]),
             ),
           ),
