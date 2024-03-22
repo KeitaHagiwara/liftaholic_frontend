@@ -63,8 +63,7 @@ Future<void> _customizeUserTrainings(
 }
 
 // トレーニング内容のモーダルを表示する
-void showTrainingContentModal(
-    context, Map training) {
+void showTrainingContentModal(context, Map training) {
 
   showModalBottomSheet(
     isScrollControlled: true,

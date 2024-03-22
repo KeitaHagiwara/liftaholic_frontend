@@ -14,6 +14,7 @@ import '../common/error_messages.dart';
 import '../common/provider.dart';
 import '../planning/training_contents_modal.dart';
 import '../planning/edit_training_menu.dart';
+import '../workout/exec_workout_menu.dart';
 
 class EditTrainingPlanScreen extends ConsumerStatefulWidget {
   const EditTrainingPlanScreen({super.key, required this.training_plan_id, required this.user_training_data});
@@ -355,62 +356,89 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
                 children: <Widget>[
                   const SizedBox(height: 8),
                   SizedBox(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(''),
-                        Text(
+                    child: Text(
                           _training_plan_name,
                           style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 16.0),
                         ),
-                        ElevatedButton(
-                          child: !ref.watch(isDoingWorkoutProvider)
-                              ? _user_training_menu.length > 0
-                                  ? Icon(Icons.play_arrow, color: Colors.green)
-                                  : Icon(Icons.play_arrow, color: Colors.grey)
-                              : Icon(Icons.stop, color: Colors.red),
-                          style: ElevatedButton.styleFrom(
-                            // side: BorderSide(color: Colors.green),
-                            backgroundColor: Colors.grey[900], // background
-                          ),
-                          onPressed: _user_training_menu.length == 0
-                              ? null
-                              : () {
-                                  if (!ref.read(isDoingWorkoutProvider.notifier).state) {
-                                    Widget callbackButton = TextButton(
-                                      child: Text('開始'),
-                                      onPressed: () {
-                                        ref.read(isDoingWorkoutProvider.notifier).state = true;
-                                        ref.read(execPlanIdProvider.notifier).state = _training_plan_id;
-                                        // モーダルを閉じる
-                                        Navigator.of(context).pop();
-                                        // // ワークアウトメイン画面に遷移する
-                                        // Navigator.of(context).push(
-                                        //     MaterialPageRoute(
-                                        //         builder: (context) {
-                                        //   // 遷移先の画面としてリスト追加画面を指定
-                                        //   return ExecWorkoutMenuScreen();
-                                        // }));
-                                      },
-                                    );
-                                    ConfirmDialogTemplate(context, callbackButton, 'ワークアウト', 'このトレーニングプランを開始します。よろしいですか？');
-                                  } else {
-                                    // ワークアウト実施中の場合
-                                    // ワークアウト終了の機能を表示する
-                                    Widget callbackButton = TextButton(
-                                      child: Text("終了"),
-                                      onPressed: () {
-                                        ref.read(isDoingWorkoutProvider.notifier).state = false;
-                                        // モーダルを閉じる
-                                        Navigator.of(context).pop();
-                                      },
-                                    );
-                                    ConfirmDialogTemplate(context, callbackButton, "終了", "実施中のワークアウトを終了します。よろしいですか？");
-                                  }
-                                },
-                        ),
-                      ],
-                    ),
+                    // child: Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //   children: [
+                    //     Text(''),
+                    //     Text(
+                    //       _training_plan_name,
+                    //       style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 16.0),
+                    //     ),
+                    //     ElevatedButton(
+                    //       child: !ref.watch(isDoingWorkoutProvider)
+                    //           ? _user_training_menu.length > 0
+                    //               ? Icon(Icons.play_arrow, color: Colors.green)
+                    //               : Icon(Icons.play_arrow, color: Colors.grey)
+                    //           : Icon(Icons.stop, color: Colors.red),
+                    //       style: ElevatedButton.styleFrom(
+                    //         // side: BorderSide(color: Colors.green),
+                    //         backgroundColor: Colors.grey[900], // background
+                    //       ),
+                    //       onPressed: _user_training_menu.length == 0
+                    //           ? null
+                    //           : () {
+                    //               if (!ref.read(isDoingWorkoutProvider.notifier).state) {
+                    //                 showDialog(
+                    //                   context: context,
+                    //                   builder: (BuildContext context_modal) {
+                    //                     return AlertDialog(
+                    //                       title: Text('ワークアウト', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
+                    //                       content: Text('このトレーニングプランを開始します。よろしいですか？'),
+                    //                       actions: [
+                    //                         TextButton(
+                    //                           child: Text("Cancel"),
+                    //                           onPressed: () {
+                    //                             Navigator.of(context_modal).pop();
+                    //                           },
+                    //                         ),
+                    //                         TextButton(
+                    //                           child: Text("開始"),
+                    //                           onPressed: () {
+                    //                             ref.read(isDoingWorkoutProvider.notifier).state = true;
+                    //                             ref.read(execPlanIdProvider.notifier).state = _training_plan_id;
+                    //                             // モーダルを閉じる
+                    //                             Navigator.of(context_modal).pop();
+                    //                           },
+                    //                         ),
+                    //                       ],
+                    //                     );
+                    //                   },
+                    //                 );
+                    //               } else {
+                    //                 showDialog(
+                    //                   context: context,
+                    //                   builder: (BuildContext context_modal) {
+                    //                     return AlertDialog(
+                    //                       title: Text('終了', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
+                    //                       content: Text('実施中のワークアウトを終了します。よろしいですか？'),
+                    //                       actions: [
+                    //                         TextButton(
+                    //                           child: Text("Cancel"),
+                    //                           onPressed: () {
+                    //                             Navigator.of(context_modal).pop();
+                    //                           },
+                    //                         ),
+                    //                         TextButton(
+                    //                           child: Text("終了"),
+                    //                           onPressed: () {
+                    //                             ref.read(isDoingWorkoutProvider.notifier).state = false;
+                    //                             // モーダルを閉じる
+                    //                             Navigator.of(context_modal).pop();
+                    //                           },
+                    //                         ),
+                    //                       ],
+                    //                     );
+                    //                   },
+                    //                 );
+                    //               }
+                    //             },
+                    //     ),
+                    //   ],
+                    // ),
                   ),
                   // トレーニングプランの説明文を記載する
                   if (_training_plan_description != '') ...[
@@ -443,7 +471,7 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
                     width: double.infinity,
                     // リスト追加ボタン
                     child: ElevatedButton(
-                      child: Text('追加', style: TextStyle(color: Colors.white)),
+                      child: Text('メニュー追加', style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue, // background
                       ),
@@ -499,36 +527,36 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
   //
   // ********************
   Widget buildTrainingListTile(String user_training_id, Map training) => Card(
-    child: Slidable(
-      endActionPane: ActionPane(motion: const BehindMotion(), children: [
-        SlidableAction(
-            backgroundColor: Colors.red,
-            borderRadius: BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10)),
-            icon: Icons.delete,
-            label: '削除',
-            onPressed: (context) {
-              _deleteTrainingDialog(
-                user_training_id,
-                training['training_name'],
-              );
-            })
-      ]),
-      child: Column(children: <Widget>[
-        ListTile(
-          leading: CircleAvatar(foregroundImage: AssetImage("assets/images/chest.png")),
-          title: Text(training['training_name']),
-          // trailing: (training['sets'] != null && training['reps'] != null && training['kgs'] != null) ? Icon(Icons.check, color: Colors.green) : Icon(Icons.settings, color: Colors.white70),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) {
-                // 遷移先の画面としてリスト追加画面を指定
-                return EditTrainingMenuScreen(user_training_id: user_training_id.toString(), training: training);
-              }),
-            );
-          },
-        )
-      ])),
-  );
+        child: Slidable(
+            endActionPane: ActionPane(motion: const BehindMotion(), children: [
+              SlidableAction(
+                  backgroundColor: Colors.red,
+                  borderRadius: BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10)),
+                  icon: Icons.delete,
+                  label: '削除',
+                  onPressed: (context) {
+                    _deleteTrainingDialog(
+                      user_training_id,
+                      training['training_name'],
+                    );
+                  })
+            ]),
+            child: Column(children: <Widget>[
+              ListTile(
+                leading: CircleAvatar(foregroundImage: AssetImage("assets/images/chest.png")),
+                title: Text(training['training_name']),
+                // trailing: (training['sets'] != null && training['reps'] != null && training['kgs'] != null) ? Icon(Icons.check, color: Colors.green) : Icon(Icons.settings, color: Colors.white70),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) {
+                      // 遷移先の画面としてリスト追加画面を指定
+                      return EditTrainingMenuScreen(user_training_id: user_training_id.toString(), training: training);
+                    }),
+                  );
+                },
+              )
+            ])),
+      );
 
   // ********************
   //

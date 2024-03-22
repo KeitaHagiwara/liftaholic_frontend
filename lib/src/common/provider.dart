@@ -34,9 +34,6 @@ final workoutStartTimeProvider = StateProvider<DateTime>((ref) => DateTime.now()
 // ワークアウト終了時間
 final workoutEndTimeProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
-// // トレーニングメニュー実施中フラグのStateProvider
-// final isDoingMenuProvider = StateProvider<bool>((ref) => false);
-
 // 実施中のトレーニングメニューIDのStateProvider
 final execMenuIdProvider = StateProvider<int>((ref) => 0);
 

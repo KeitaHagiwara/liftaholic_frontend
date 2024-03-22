@@ -86,6 +86,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
             : !ref.watch(isDoingWorkoutProvider) // ワークアウト実施中ではない場合
                 ? Container(
+                    padding: EdgeInsets.only(bottom: 10),
                     child: ref.watch(userTrainingDataProvider).length == 0
                         ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.public_off, size: 50)]))
                         : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -163,52 +164,65 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                 )),
                             const SizedBox(height: 8),
                             Flexible(
-                                child: _user_training_menu.length == 0
-                                    ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('トレーニングプランが未選択です。')]))
-                                    : ListView.builder(
-                                        itemCount: _user_training_menu.length,
-                                        itemBuilder: (BuildContext context, int index) {
-                                          return Column(children: <Widget>[
-                                            ListTile(
-                                                dense: true,
-                                                title: Text('・' + _user_training_menu[List.from(_user_training_menu.keys)[index]]['training_name']),
-                                                onTap: () {
-                                                  var training = _user_training_menu[List.from(_user_training_menu.keys)[index]];
-                                                  showTrainingContentModal(context, training);
-                                                })
-                                          ]);
-                                        })),
-                            ElevatedButton(
-                                child: Text('ワークアウト開始', style: TextStyle(color: Colors.white)),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                onPressed: ref.watch(execPlanIdProvider) == ''
-                                    ? null
-                                    : () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context_modal) {
-                                            return AlertDialog(
-                                              title: Text('ワークアウト', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
-                                              content: Text('選択したトレーニングプランを開始します。よろしいですか？'),
-                                              actions: [
-                                                TextButton(
-                                                  child: Text("Cancel"),
-                                                  onPressed: () {
-                                                    Navigator.of(context_modal).pop();
-                                                  },
-                                                ),
-                                                TextButton(
-                                                  child: Text("開始"),
-                                                  onPressed: () {
-                                                    ref.read(isDoingWorkoutProvider.notifier).state = true;
-                                                    Navigator.of(context_modal).pop();
-                                                  },
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      }),
+                                child: ref.read(execPlanIdProvider) == ''
+                                    // トレーニングプランが選択されていない場合
+                                    ? Center(
+                                        child: Column(mainAxisSize: MainAxisSize.min, children: [
+                                        Text('トレーニングプランが未選択です。'),
+                                      ]))
+                                    // トレーニングプランが選択されている場合
+                                    : _user_training_menu.length == 0
+                                        // トレーニングプランにメニューが登録されていない場合
+                                        ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('トレーニングメニューが未登録です。')]))
+                                        // トレーニングプランにメニューが登録されている場合
+                                        : ListView.builder(
+                                            itemCount: _user_training_menu.length,
+                                            itemBuilder: (BuildContext context, int index) {
+                                              return Column(children: <Widget>[
+                                                ListTile(
+                                                    dense: true,
+                                                    title: Text('・' + _user_training_menu[List.from(_user_training_menu.keys)[index]]['training_name']),
+                                                    onTap: () {
+                                                      var training = _user_training_menu[List.from(_user_training_menu.keys)[index]];
+                                                      showTrainingContentModal(context, training);
+                                                    })
+                                              ]);
+                                            })),
+                            Container(
+                              padding: EdgeInsets.only(left: 64, right: 64),
+                              width: double.infinity, // 横幅いっぱいに広げる
+                              child: ElevatedButton(
+                                  child: Text('ワークアウト開始', style: TextStyle(color: Colors.white)),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                  onPressed: ref.watch(execPlanIdProvider) == ''
+                                      ? null
+                                      : () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context_modal) {
+                                              return AlertDialog(
+                                                title: Text('ワークアウト', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
+                                                content: Text('選択したトレーニングプランを開始します。よろしいですか？'),
+                                                actions: [
+                                                  TextButton(
+                                                    child: Text("Cancel"),
+                                                    onPressed: () {
+                                                      Navigator.of(context_modal).pop();
+                                                    },
+                                                  ),
+                                                  TextButton(
+                                                    child: Text("開始"),
+                                                    onPressed: () {
+                                                      ref.read(isDoingWorkoutProvider.notifier).state = true;
+                                                      Navigator.of(context_modal).pop();
+                                                    },
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        }),
+                            )
                           ]))
                 : ExecWorkoutMenuScreen() // ワークアウト実施中の場合
         );
