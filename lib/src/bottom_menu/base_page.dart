@@ -22,7 +22,8 @@ class BasePage extends HookWidget {
       appBar: AppBar(
         title: Text(
           appName,
-          style: TextStyle(fontFamily: 'Honk', fontSize: 36, color: Colors.blue),
+          style:
+              TextStyle(fontFamily: 'Honk', fontSize: 36, color: Colors.blue),
         ),
       ),
       body: Stack(

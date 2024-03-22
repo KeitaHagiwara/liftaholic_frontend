@@ -16,21 +16,17 @@ import '../planning/training_contents_modal.dart';
 import '../planning/edit_training_menu.dart';
 
 class EditTrainingPlanScreen extends ConsumerStatefulWidget {
-  const EditTrainingPlanScreen(
-      {super.key,
-      required this.training_plan_id,
-      required this.registered_plan_list});
+  const EditTrainingPlanScreen({super.key, required this.training_plan_id, required this.user_training_data});
 
   // 画面遷移元からのデータを受け取る変数
   final String training_plan_id;
-  final List registered_plan_list;
+  final Map user_training_data;
 
   @override
   _EditTrainingPlanScreenState createState() => _EditTrainingPlanScreenState();
 }
 
-class _EditTrainingPlanScreenState
-    extends ConsumerState<EditTrainingPlanScreen> {
+class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen> {
   // ********************
   //
   // イニシャライザ設定
@@ -39,26 +35,19 @@ class _EditTrainingPlanScreenState
   final itemController = TextEditingController();
 
   // 画面遷移元から引数で取得した変数
-  late String training_plan_id;
-  late List registered_plan_list;
+  late String _training_plan_id;
+  late Map _user_training_data;
 
-  String training_plan_name = '';
-  String training_plan_description = '';
+  String _training_plan_name = '';
+  String _training_plan_description = '';
+  Map _user_training_menu = {};
 
   String? uid = '';
 
   bool _loading = false;
 
-  Map _trainings_registered = {};
-
-  // Map _trainings_registered = {
-  //   1: {'training_name': 'ベンチプレス', 'description': 'bench'},
-  //   2: {'training_name': 'プッシュアップ', 'description': 'push-up'},
-  //   3: {'training_name': 'インクラインダンベルプレス', 'description': 'press'}
-  // };
-
-  // トレーニングメニューを入れる辞書
-  Map<String, dynamic> training_menu = {};
+  // マスタのトレーニングメニューを入れる辞書
+  Map<String, dynamic> _training_menu_master = {};
 
   // ********************
   //
@@ -68,7 +57,7 @@ class _EditTrainingPlanScreenState
   // ----------------------------
   // 全トレーニングメニューを取得する
   // ----------------------------
-  Future<void> _getAllTrainingMenu() async {
+  Future<void> _getAllTrainingMenuMaster() async {
     // スピナー表示
     setState(() {
       _loading = true;
@@ -77,11 +66,7 @@ class _EditTrainingPlanScreenState
     await dotenv.load(fileName: '.env');
 
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/training_plan/get_all_training_menu");
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/get_all_training_menu");
 
     try {
       var response = await http.get(url).timeout(Duration(seconds: 10));
@@ -92,11 +77,10 @@ class _EditTrainingPlanScreenState
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
           // トレーニングメニューのデータを作成
-          training_menu = jsonResponse['training_menu'];
+          _training_menu_master = jsonResponse['training_menu'];
         });
       } else {
-        AlertDialogTemplate(
-            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+        AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
       }
     } catch (e) {
       //リクエストに失敗した場合はエラーメッセージを表示
@@ -112,52 +96,44 @@ class _EditTrainingPlanScreenState
   // ----------------------------
   // トレーニングプランに登録済みのトレーニングを取得する
   // ----------------------------
-  Future<void> _getRegisteredTrainings(training_plan_id) async {
-    setState(() {
-      // スピナー非表示
-      _loading = true;
-    });
+  // Future<void> _getRegisteredTrainings(training_plan_id) async {
+  //   setState(() {
+  //     // スピナー非表示
+  //     _loading = true;
+  //   });
 
-    await dotenv.load(fileName: '.env');
-    //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/training_plan/get_registered_trainings/" +
-        training_plan_id.toString());
+  //   await dotenv.load(fileName: '.env');
+  //   //リクエスト先のurl
+  //   Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/get_registered_trainings/" + training_plan_id.toString());
 
-    try {
-      if (!mounted) return;
-      var response = await http.get(url).timeout(Duration(seconds: 10));
+  //   try {
+  //     if (!mounted) return;
+  //     var response = await http.get(url).timeout(Duration(seconds: 10));
 
-      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      if (jsonResponse['statusCode'] == 200) {
-        setState(() {
-          // トレーニングプランの詳細をWidgetに設定
-          training_plan_name =
-              jsonResponse['training_plan']['training_plan_name'];
-          training_plan_description =
-              jsonResponse['training_plan']['training_plan_description'];
+  //     var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+  //     if (jsonResponse['statusCode'] == 200) {
+  //       setState(() {
+  //         // トレーニングプランの詳細をWidgetに設定
+  //         _training_plan_name = jsonResponse['training_plan']['training_plan_name'];
+  //         _training_plan_description = jsonResponse['training_plan']['training_plan_description'];
 
-          // トレーニングメニューのデータを作成
-          _trainings_registered = jsonResponse['user_training_menu'];
-        });
-      } else {
-        //リクエストに失敗した場合はエラーメッセージを表示
-        AlertDialogTemplate(
-            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
-      }
-    } catch (e) {
-      //リクエストに失敗した場合はエラーメッセージを表示
-      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
-    } finally {
-      setState(() {
-        // スピナー非表示
-        _loading = false;
-      });
-    }
-  }
+  //         // トレーニングメニューのデータを作成
+  //         _trainings_registered = jsonResponse['user_training_menu'];
+  //       });
+  //     } else {
+  //       //リクエストに失敗した場合はエラーメッセージを表示
+  //       AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+  //     }
+  //   } catch (e) {
+  //     //リクエストに失敗した場合はエラーメッセージを表示
+  //     AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+  //   } finally {
+  //     setState(() {
+  //       // スピナー非表示
+  //       _loading = false;
+  //     });
+  //   }
+  // }
 
   // ----------------------------
   // トレーニングプランにメニューを追加する
@@ -165,27 +141,19 @@ class _EditTrainingPlanScreenState
   Future<void> _addTrainingMenu(training_plan_id, training_no) async {
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/training_plan/add_training_menu");
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/add_training_menu");
 
     Map<String, String> headers = {'content-type': 'application/json'};
-    String body = json.encode(
-        {'training_plan_id': training_plan_id, 'training_no': training_no});
+    String body = json.encode({'training_plan_id': training_plan_id, 'training_no': training_no});
 
     // POSTリクエストを投げる
     try {
-      http.Response response = await http
-          .post(url, headers: headers, body: body)
-          .timeout(Duration(seconds: 10));
+      http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
-          _trainings_registered[jsonResponse['add_user_training_id'][0]
-              .toString()] = jsonResponse['add_data'];
+          _user_training_data['training_menu'][jsonResponse['add_user_training_id'][0].toString()] = jsonResponse['add_data'];
           //リクエストに失敗した場合はエラーメッセージを表示
           AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
         });
@@ -194,8 +162,7 @@ class _EditTrainingPlanScreenState
         AlertDialogTemplate(context, '登録済み', jsonResponse['statusMessage']);
       } else {
         //リクエストに失敗した場合はエラーメッセージを表示
-        AlertDialogTemplate(
-            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+        AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
       }
     } catch (e) {
       //リクエストに失敗した場合はエラーメッセージを表示
@@ -219,17 +186,11 @@ class _EditTrainingPlanScreenState
 
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/training_plan/delete_training_plan/" +
-        training_plan_id.toString());
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/delete_training_plan/" + training_plan_id.toString());
 
     // POSTリクエストを投げる
     try {
-      http.Response response =
-          await http.delete(url).timeout(Duration(seconds: 10));
+      http.Response response = await http.delete(url).timeout(Duration(seconds: 10));
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       // 削除が成功したらプランニング画面に遷移する
@@ -237,8 +198,7 @@ class _EditTrainingPlanScreenState
         Navigator.of(context).pop(jsonResponse['deleted_id']);
       } else {
         //リクエストに失敗した場合はエラーメッセージを表示
-        AlertDialogTemplate(
-            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+        AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
       }
     } catch (e) {
       //リクエストに失敗した場合はエラーメッセージを表示
@@ -262,17 +222,11 @@ class _EditTrainingPlanScreenState
 
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/training_plan/delete_user_training_menu/" +
-        user_training_id.toString());
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/delete_user_training_menu/" + user_training_id.toString());
 
     // POSTリクエストを投げる
     try {
-      http.Response response =
-          await http.delete(url).timeout(Duration(seconds: 10));
+      http.Response response = await http.delete(url).timeout(Duration(seconds: 10));
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       // 削除が成功したら画面をリロード
@@ -280,7 +234,7 @@ class _EditTrainingPlanScreenState
         // 画面から該当のトレーニングを削除する
         setState(() {
           // 配列の何行目かを確認して、該当の配列番号の要素を削除する
-          _trainings_registered.remove(user_training_id);
+          _user_training_data['training_menu'].remove(user_training_id.toString());
         });
       }
     } catch (e) {
@@ -302,9 +256,7 @@ class _EditTrainingPlanScreenState
       context: context,
       builder: (BuildContext context_modal) {
         return AlertDialog(
-          title: Text('メニュー削除',
-              style: TextStyle(fontWeight: FontWeight.bold)
-                  .copyWith(fontSize: 18)),
+          title: Text('メニュー削除', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
           content: Text('「' + training_name + '」をトレーニングメニューから削除します。よろしいですか？'),
           actions: [
             TextButton(
@@ -329,15 +281,12 @@ class _EditTrainingPlanScreenState
   // ----------------------------
   // トレーニングプランを削除するダイアログ
   // ----------------------------
-  void _deleteTrainingPlanDialog(
-      String training_plan_id, String training_plan_name) {
+  void _deleteTrainingPlanDialog(String training_plan_id, String training_plan_name) {
     showDialog(
       context: context,
       builder: (BuildContext context_modal) {
         return AlertDialog(
-          title: Text('プラン削除',
-              style: TextStyle(fontWeight: FontWeight.bold)
-                  .copyWith(fontSize: 18)),
+          title: Text('プラン削除', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
           content: Text('トレーニングプラン「' + training_plan_name + '」を削除します。よろしいですか？'),
           actions: [
             // プラン削除キャンセル
@@ -367,14 +316,18 @@ class _EditTrainingPlanScreenState
     super.initState();
 
     // 受け取ったデータを状態を管理する変数に格納
-    training_plan_id = widget.training_plan_id;
-    registered_plan_list = widget.registered_plan_list;
+    _training_plan_id = widget.training_plan_id;
+    _user_training_data = widget.user_training_data;
+
+    _training_plan_name = _user_training_data['training_plan_name'];
+    _training_plan_description = _user_training_data['training_plan_description'];
+    _user_training_menu = _user_training_data['training_menu'];
 
     // トレーニングプランに登録済みのトレーニングメニューを取得する
-    _getRegisteredTrainings(training_plan_id);
+    // _getRegisteredTrainings(_training_plan_id);
 
     // 登録済みの全トレーニングメニューを取得する
-    _getAllTrainingMenu();
+    _getAllTrainingMenuMaster();
   }
 
   // ********************
@@ -389,13 +342,11 @@ class _EditTrainingPlanScreenState
         title: Text(
           'プラン編集',
           textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.bold)
-              .copyWith(color: Colors.white70, fontSize: 18.0),
+          style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
         ),
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
+          ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
           : Container(
               // 余白を付ける
               padding: EdgeInsets.all(10),
@@ -409,13 +360,12 @@ class _EditTrainingPlanScreenState
                       children: [
                         Text(''),
                         Text(
-                          training_plan_name,
-                          style: TextStyle(fontWeight: FontWeight.bold)
-                              .copyWith(color: Colors.white70, fontSize: 16.0),
+                          _training_plan_name,
+                          style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 16.0),
                         ),
                         ElevatedButton(
                           child: !ref.watch(isDoingWorkoutProvider)
-                              ? _trainings_registered.length > 0
+                              ? _user_training_menu.length > 0
                                   ? Icon(Icons.play_arrow, color: Colors.green)
                                   : Icon(Icons.play_arrow, color: Colors.grey)
                               : Icon(Icons.stop, color: Colors.red),
@@ -423,22 +373,15 @@ class _EditTrainingPlanScreenState
                             // side: BorderSide(color: Colors.green),
                             backgroundColor: Colors.grey[900], // background
                           ),
-                          onPressed: _trainings_registered.length == 0
+                          onPressed: _user_training_menu.length == 0
                               ? null
                               : () {
-                                  if (!ref
-                                      .read(isDoingWorkoutProvider.notifier)
-                                      .state) {
+                                  if (!ref.read(isDoingWorkoutProvider.notifier).state) {
                                     Widget callbackButton = TextButton(
                                       child: Text('開始'),
                                       onPressed: () {
-                                        ref
-                                            .read(
-                                                isDoingWorkoutProvider.notifier)
-                                            .state = true;
-                                        ref
-                                            .read(execPlanIdProvider.notifier)
-                                            .state = int.parse(training_plan_id);
+                                        ref.read(isDoingWorkoutProvider.notifier).state = true;
+                                        ref.read(execPlanIdProvider.notifier).state = _training_plan_id;
                                         // モーダルを閉じる
                                         Navigator.of(context).pop();
                                         // // ワークアウトメイン画面に遷移する
@@ -450,30 +393,19 @@ class _EditTrainingPlanScreenState
                                         // }));
                                       },
                                     );
-                                    ConfirmDialogTemplate(
-                                        context,
-                                        callbackButton,
-                                        'ワークアウト',
-                                        'このトレーニングプランを開始します。よろしいですか？');
+                                    ConfirmDialogTemplate(context, callbackButton, 'ワークアウト', 'このトレーニングプランを開始します。よろしいですか？');
                                   } else {
                                     // ワークアウト実施中の場合
                                     // ワークアウト終了の機能を表示する
                                     Widget callbackButton = TextButton(
                                       child: Text("終了"),
                                       onPressed: () {
-                                        ref
-                                            .read(
-                                                isDoingWorkoutProvider.notifier)
-                                            .state = false;
+                                        ref.read(isDoingWorkoutProvider.notifier).state = false;
                                         // モーダルを閉じる
                                         Navigator.of(context).pop();
                                       },
                                     );
-                                    ConfirmDialogTemplate(
-                                        context,
-                                        callbackButton,
-                                        "終了",
-                                        "実施中のワークアウトを終了します。よろしいですか？");
+                                    ConfirmDialogTemplate(context, callbackButton, "終了", "実施中のワークアウトを終了します。よろしいですか？");
                                   }
                                 },
                         ),
@@ -481,13 +413,12 @@ class _EditTrainingPlanScreenState
                     ),
                   ),
                   // トレーニングプランの説明文を記載する
-                  if (training_plan_description != '') ...[
+                  if (_training_plan_description != '') ...[
                     const SizedBox(height: 8),
                     SizedBox(
                       child: Text(
-                        training_plan_description,
-                        style: TextStyle()
-                            .copyWith(color: Colors.white70, fontSize: 12.0),
+                        _training_plan_description,
+                        style: TextStyle().copyWith(color: Colors.white70, fontSize: 12.0),
                       ),
                     ),
                   ],
@@ -495,18 +426,13 @@ class _EditTrainingPlanScreenState
                   const SizedBox(height: 8),
                   Flexible(
                     // height: 150,
-                    child: _trainings_registered.length == 0
-                        ? Center(
-                            child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [Text('トレーニングが未登録です。')]))
+                    child: _user_training_menu.length == 0
+                        ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('トレーニングが未登録です。')]))
                         : ListView.builder(
-                            itemCount: _trainings_registered.length,
+                            itemCount: _user_training_menu.length,
                             itemBuilder: (BuildContext context, int index) {
-                              var user_training_id =
-                                  List.from(_trainings_registered.keys)[index];
-                              return buildTrainingListTile(user_training_id,
-                                  _trainings_registered[user_training_id]);
+                              var user_training_id = List.from(_user_training_menu.keys)[index];
+                              return buildTrainingListTile(user_training_id, _user_training_menu[user_training_id]);
                             }),
                   ),
                   // トレーニング追加ボタン
@@ -522,8 +448,7 @@ class _EditTrainingPlanScreenState
                         backgroundColor: Colors.blue, // background
                       ),
                       onPressed: () {
-                        selectTrainingModal(
-                            context, uid, training_plan_id, training_menu);
+                        selectTrainingModal(context, uid, _training_plan_id, _training_menu_master);
                       },
                     ),
                   ),
@@ -552,15 +477,13 @@ class _EditTrainingPlanScreenState
                     width: double.infinity,
                     // リスト追加ボタン
                     child: ElevatedButton(
-                      child:
-                          Text('プラン削除', style: TextStyle(color: Colors.white)),
+                      child: Text('プラン削除', style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red, // background
                       ),
                       onPressed: () {
                         // Navigator.of(context).pop();
-                        _deleteTrainingPlanDialog(
-                            training_plan_id, training_plan_name);
+                        _deleteTrainingPlanDialog(_training_plan_id, _training_plan_name);
                       },
                     ),
                   ),
@@ -576,45 +499,36 @@ class _EditTrainingPlanScreenState
   //
   // ********************
   Widget buildTrainingListTile(String user_training_id, Map training) => Card(
-        child: Slidable(
-            endActionPane: ActionPane(motion: const BehindMotion(), children: [
-              SlidableAction(
-                  backgroundColor: Colors.red,
-                  borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(10),
-                      bottomRight: Radius.circular(10)),
-                  icon: Icons.delete,
-                  label: '削除',
-                  onPressed: (context) {
-                    _deleteTrainingDialog(
-                      user_training_id,
-                      training['training_name'],
-                    );
-                  })
-            ]),
-            child: Column(children: <Widget>[
-              ListTile(
-                leading: CircleAvatar(
-                    foregroundImage: AssetImage("assets/images/chest.png")),
-                title: Text(training['training_name']),
-                trailing: (training['sets'] != null &&
-                        training['reps'] != null &&
-                        training['kgs'] != null)
-                    ? Icon(Icons.check, color: Colors.green)
-                    : Icon(Icons.settings, color: Colors.white70),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) {
-                      // 遷移先の画面としてリスト追加画面を指定
-                      return EditTrainingMenuScreen(
-                          user_training_id: user_training_id.toString(),
-                          training: training);
-                    }),
-                  );
-                },
-              )
-            ])),
-      );
+    child: Slidable(
+      endActionPane: ActionPane(motion: const BehindMotion(), children: [
+        SlidableAction(
+            backgroundColor: Colors.red,
+            borderRadius: BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10)),
+            icon: Icons.delete,
+            label: '削除',
+            onPressed: (context) {
+              _deleteTrainingDialog(
+                user_training_id,
+                training['training_name'],
+              );
+            })
+      ]),
+      child: Column(children: <Widget>[
+        ListTile(
+          leading: CircleAvatar(foregroundImage: AssetImage("assets/images/chest.png")),
+          title: Text(training['training_name']),
+          // trailing: (training['sets'] != null && training['reps'] != null && training['kgs'] != null) ? Icon(Icons.check, color: Colors.green) : Icon(Icons.settings, color: Colors.white70),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) {
+                // 遷移先の画面としてリスト追加画面を指定
+                return EditTrainingMenuScreen(user_training_id: user_training_id.toString(), training: training);
+              }),
+            );
+          },
+        )
+      ])),
+  );
 
   // ********************
   //
@@ -637,7 +551,6 @@ class _EditTrainingPlanScreenState
     //     },
     // };
 
-    print(trainings);
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -663,8 +576,7 @@ class _EditTrainingPlanScreenState
                   child: Text(
                     'トレーニングを選択',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold)
-                        .copyWith(color: Colors.white70, fontSize: 18.0),
+                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
                   ),
                 ),
                 // // 検索ボックス
@@ -693,8 +605,7 @@ class _EditTrainingPlanScreenState
                           child: ListTile(
                             title: Text(
                               List.from(trainings.keys)[i],
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ),
                           decoration: BoxDecoration(
@@ -703,42 +614,26 @@ class _EditTrainingPlanScreenState
                           ),
                         ),
                         children: [
-                          for (int i_c1 = 0;
-                              i_c1 <
-                                  trainings[List.from(trainings.keys)[i]]
-                                      .length;
-                              i_c1++) ...{
+                          for (int i_c1 = 0; i_c1 < trainings[List.from(trainings.keys)[i]].length; i_c1++) ...{
                             Slidable(
-                              startActionPane: ActionPane(
-                                  motion: const ScrollMotion(),
-                                  children: [
-                                    SlidableAction(
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(10),
-                                            bottomLeft: Radius.circular(10)),
-                                        backgroundColor: Colors.green,
-                                        icon: Icons.add,
-                                        label: '追加',
-                                        onPressed: (context) {
-                                          // トレーニングIDを取得する
-                                          var training_no = List.from(
-                                              List.from(trainings.values)[i]
-                                                  .keys)[i_c1];
-                                          // プランにトレーニングメニューを追加する
-                                          _addTrainingMenu(
-                                              plan_id, training_no);
-                                        })
-                                  ]),
+                              startActionPane: ActionPane(motion: const ScrollMotion(), children: [
+                                SlidableAction(
+                                    borderRadius: BorderRadius.only(topLeft: Radius.circular(10), bottomLeft: Radius.circular(10)),
+                                    backgroundColor: Colors.green,
+                                    icon: Icons.add,
+                                    label: '追加',
+                                    onPressed: (context) {
+                                      // トレーニングIDを取得する
+                                      var training_no = List.from(List.from(trainings.values)[i].keys)[i_c1];
+                                      // プランにトレーニングメニューを追加する
+                                      _addTrainingMenu(plan_id, training_no);
+                                    })
+                              ]),
                               child: ListTile(
-                                title: Text(List.from(
-                                    List.from(trainings.values)[i]
-                                        .values)[i_c1]['training_name']),
+                                title: Text(List.from(List.from(trainings.values)[i].values)[i_c1]['training_name']),
                                 onTap: () {
                                   // トレーニングのコンテンツのモーダルを表示する
-                                  showTrainingContentModal(
-                                      context,
-                                      List.from(List.from(trainings.values)[i]
-                                          .values)[i_c1]);
+                                  showTrainingContentModal(context, List.from(List.from(trainings.values)[i].values)[i_c1]);
                                 },
                               ),
                             )

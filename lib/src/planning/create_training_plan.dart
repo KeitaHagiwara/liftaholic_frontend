@@ -4,22 +4,23 @@ import 'dart:convert';
 // import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
 
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
 import '../bottom_menu/planning.dart';
 
-class CreateTrainingPlanScreen extends StatefulWidget {
+class CreateTrainingPlanScreen extends ConsumerStatefulWidget {
   const CreateTrainingPlanScreen({super.key});
 
   @override
-  _CreateTrainingPlanScreenState createState() =>
-      _CreateTrainingPlanScreenState();
+  _CreateTrainingPlanScreenState createState() => _CreateTrainingPlanScreenState();
 }
 
-class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
+class _CreateTrainingPlanScreenState extends ConsumerState<CreateTrainingPlanScreen> {
   // ********************
   // イニシャライザ設定
   // ********************
@@ -30,7 +31,6 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
   bool _loading = false;
 
   // 入力されたテキストをデータとして持つ
-  int _training_count = 0;
   Map<String, String> _createPlanDict = {};
 
   // テキストフィールドのコントローラーを設定する
@@ -48,26 +48,14 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
 
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/training_plan/create_training_plan");
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/create_training_plan");
 
     Map<String, String> headers = {'content-type': 'application/json'};
-    String body = json.encode({
-      'user_id': FirebaseAuth.instance.currentUser?.uid,
-      'training_title': _createPlanDict['training_title'],
-      'training_description': _createPlanDict['training_description'] == null
-          ? ''
-          : _createPlanDict['training_description']
-    });
+    String body = json.encode({'user_id': FirebaseAuth.instance.currentUser?.uid, 'training_title': _createPlanDict['training_title'], 'training_description': _createPlanDict['training_description'] == null ? '' : _createPlanDict['training_description']});
 
     // POSTリクエストを投げる
     try {
-      http.Response response = await http
-          .post(url, headers: headers, body: body)
-          .timeout(Duration(seconds: 10));
+      http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
       return jsonResponse['result']['id'];
@@ -91,13 +79,11 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
         title: Text(
           'トレーニングプラン作成',
           textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.bold)
-              .copyWith(color: Colors.white70, fontSize: 18.0),
+          style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
         ),
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
+          ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
           : Container(
               // 余白を付ける
               padding: EdgeInsets.all(64),
@@ -116,8 +102,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
-                        borderSide:
-                            const BorderSide(color: Colors.blue, width: 2.0),
+                        borderSide: const BorderSide(color: Colors.blue, width: 2.0),
                       ),
                     ),
                     // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
@@ -146,8 +131,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
-                        borderSide:
-                            const BorderSide(color: Colors.blue, width: 2.0),
+                        borderSide: const BorderSide(color: Colors.blue, width: 2.0),
                       ),
                     ),
                     // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
@@ -166,8 +150,7 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         // null & 空白チェック
-                        if (_createPlanDict['training_title'] == null ||
-                            _createPlanDict['training_title'] == '') {
+                        if (_createPlanDict['training_title'] == null || _createPlanDict['training_title'] == '') {
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
@@ -187,24 +170,24 @@ class _CreateTrainingPlanScreenState extends State<CreateTrainingPlanScreen> {
                           );
                           // チェックOKだった場合
                         } else {
-                          // DBにトレーニングプランを登録する
-                          var plan_id =
-                              await _createTrainingPlan(_createPlanDict);
+                          // DBにトレーニングプランを登録する(plan_idが返却される)
+                          var plan_id = await _createTrainingPlan(_createPlanDict);
                           if (plan_id != null) {
-                            // plan_idに登録済みIDを設定する
-                            _createPlanDict['plan_id'] = plan_id.toString();
-                            // training_countに0を設定する
-                            _createPlanDict['training_count'] =
-                                _training_count.toString();
-                            Navigator.of(context).pop(_createPlanDict);
+                            var _newPlan = {
+                              'plan_id': plan_id.toString(),
+                              'trainings': {
+                                'training_plan_name': _createPlanDict['training_title'],
+                                'training_plan_description': _createPlanDict['training_description'] == null ? '' : _createPlanDict['training_description'],
+                                'count': 0,
+                                'training_menu': {}
+                              }
+                            };
+                            Navigator.of(context).pop(_newPlan);
                           } else {
                             // エラーになった場合はTextFieldのinputの内容が消えてしまうため、初期値を再設定する
                             setState(() {
-                              _plan_name_controller.text =
-                                  _createPlanDict['training_title'].toString();
-                              _plan_desc_controller.text =
-                                  _createPlanDict['training_description']
-                                      .toString();
+                              _plan_name_controller.text = _createPlanDict['training_title'].toString();
+                              _plan_desc_controller.text = _createPlanDict['training_description'].toString();
                             });
                           }
                         }

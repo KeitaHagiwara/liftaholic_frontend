@@ -9,16 +9,17 @@ import 'package:flutter_spinbox/cupertino.dart';
 import 'package:flutter_spinbox/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
 
 import '../common/dialogs.dart';
 import '../common/error_messages.dart';
+import '../common/functions.dart';
 
 class StopWatchScreen extends ConsumerStatefulWidget {
-  const StopWatchScreen(
-      {Key? key, required this.user_training_menu, required this.index})
-      : super(key: key);
+  const StopWatchScreen({Key? key, required this.user_training_id, required this.exec_training_menu, required this.index}) : super(key: key);
 
-  final List user_training_menu;
+  final String user_training_id;
+  final Map exec_training_menu;
   final int index;
 
   @override
@@ -30,8 +31,11 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
   Stopwatch stopwatch = Stopwatch();
   late Timer timer;
 
-  late List _user_training_menu;
+  late String _user_training_id;
+  late Map _exec_training_menu;
   late int _menu_index;
+
+  List _training_set_list = [];
 
   void start() {
     stopwatch.start();
@@ -44,10 +48,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
   void update(Timer t) {
     if (stopwatch.isRunning) {
       setState(() {
-        timeString =
-            (stopwatch.elapsed.inMinutes % 60).toString().padLeft(2, "0") +
-                ":" +
-                (stopwatch.elapsed.inSeconds % 60).toString().padLeft(2, "0");
+        timeString = (stopwatch.elapsed.inMinutes % 60).toString().padLeft(2, "0") + ":" + (stopwatch.elapsed.inSeconds % 60).toString().padLeft(2, "0");
 
         // millisecond単位
         // timeString =
@@ -80,8 +81,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
           Navigator.of(context).pop();
         },
       );
-      ConfirmDialogTemplate(
-          context, callbackButton, 'リセット', 'トレーニングは実施中です。タイマーをリセットしてもよろしいですか？');
+      ConfirmDialogTemplate(context, callbackButton, 'リセット', 'トレーニングは実施中です。タイマーをリセットしてもよろしいですか？');
     } else {
       timer.cancel();
       stopwatch.reset();
@@ -92,12 +92,32 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
     }
   }
 
+  void set_complete() {
+    // タイマーが動いていたらストップウォッチを止める
+    if (stopwatch.isRunning) {
+      timer.cancel();
+      stopwatch.reset();
+      stopwatch.stop();
+    }
+    setState(() {
+      // リストの更新処理を行う
+      _training_set_list[_menu_index]['time'] = timeString;
+      _training_set_list[_menu_index]['is_completed'] = true;
+      _exec_training_menu[_user_training_id]['progress'] = calc_progress(_user_training_id, _training_set_list);
+    });
+    // Providerの値を更新する
+    ref.read(execTrainingMenuProvider.notifier).state = _exec_training_menu;
+  }
+
   @override
   void initState() {
     super.initState();
 
-    _user_training_menu = widget.user_training_menu;
+    _user_training_id = widget.user_training_id;
+    _exec_training_menu = widget.exec_training_menu;
     _menu_index = widget.index;
+
+    _training_set_list = _exec_training_menu[_user_training_id]['sets_achieve'];
   }
 
   @override
@@ -115,8 +135,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                   icon: Icon(Icons.cancel),
                   onPressed: () {
                     if (stopwatch.isRunning) {
-                      AlertDialogTemplate(context, CFM_MSG_TITLE,
-                          'トレーニング実施中です。タイマーを停止してから閉じてください。');
+                      AlertDialogTemplate(context, CFM_MSG_TITLE, 'トレーニング実施中です。タイマーを停止してから閉じてください。');
                     } else {
                       Navigator.pop(context); // Close the sheet.
                     }
@@ -124,13 +143,17 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
             ),
             SizedBox(
               width: double.infinity,
-              child: Text(
-                // set_order.toString() + 'セット目',
-                '1セット目',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.bold)
-                    .copyWith(color: Colors.white70, fontSize: 18.0),
-              ),
+              child: _training_set_list[_menu_index]['is_completed']
+                ? Text(
+                    (_menu_index + 1).toString() + 'セット目は完了しています',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.green, fontSize: 18.0),
+                  )
+                : Text(
+                    (_menu_index + 1).toString() + 'セット目',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                  ),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -138,22 +161,18 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
               child: Container(
                 width: 200,
                 height: 200,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                          offset: Offset(10, 10),
-                          color: Colors.black38,
-                          blurRadius: 15),
-                    ]),
+                decoration: BoxDecoration(color: Colors.grey.shade300, shape: BoxShape.circle, boxShadow: [
+                  BoxShadow(offset: Offset(10, 10), color: Colors.black38, blurRadius: 15),
+                ]),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Icon(Icons.timer, size: 60, color: Colors.grey.shade800),
-                    Text(timeString,
-                        style: TextStyle(
-                            fontSize: 40, color: Colors.grey.shade900))
+                    if (_training_set_list[_menu_index]['is_completed']) ...{
+                      Text(_training_set_list[_menu_index]['time'], style: TextStyle(fontSize: 40, color: Colors.grey.shade900))
+                    } else ...{
+                      Text(timeString, style: TextStyle(fontSize: 40, color: Colors.grey.shade900))
+                    }
                   ],
                 ),
               ),
@@ -164,45 +183,32 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   TextButton(
-                      onPressed: () {
-                        reset();
-                      },
+                      onPressed: _training_set_list[_menu_index]['is_completed']
+                        ? null
+                        : () {
+                            reset();
+                          },
                       child: Container(
                         height: 70,
                         width: 70,
-                        decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                  offset: Offset(10, 10),
-                                  color: Colors.black38,
-                                  blurRadius: 15),
-                            ]),
-                        child: Icon(Icons.refresh,
-                            size: 40, color: Colors.grey.shade800),
+                        decoration: BoxDecoration(color: Colors.grey.shade300, shape: BoxShape.circle, boxShadow: [
+                          BoxShadow(offset: Offset(10, 10), color: Colors.black38, blurRadius: 15),
+                        ]),
+                        child: Icon(Icons.refresh, size: 40, color: Colors.grey.shade800),
                       )),
                   TextButton(
-                      onPressed: () {
-                        stopwatch.isRunning ? stop() : start();
-                      },
+                      onPressed: _training_set_list[_menu_index]['is_completed']
+                        ? null
+                        : () {
+                            stopwatch.isRunning ? stop() : start();
+                          },
                       child: Container(
                         height: 70,
                         width: 70,
-                        decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                  offset: Offset(10, 10),
-                                  color: Colors.black38,
-                                  blurRadius: 15),
-                            ]),
-                        child: stopwatch.isRunning
-                            ? Icon(Icons.pause,
-                                size: 40, color: Colors.yellow[800])
-                            : Icon(Icons.play_arrow,
-                                size: 40, color: Colors.green),
+                        decoration: BoxDecoration(color: Colors.grey.shade300, shape: BoxShape.circle, boxShadow: [
+                          BoxShadow(offset: Offset(10, 10), color: Colors.black38, blurRadius: 15),
+                        ]),
+                        child: stopwatch.isRunning ? Icon(Icons.pause, size: 40, color: Colors.yellow[800]) : Icon(Icons.play_arrow, size: 40, color: Colors.green),
                       ))
                 ],
               ),
@@ -212,7 +218,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
               child: SpinBox(
                 min: 0.0,
                 max: 500.0,
-                value: _user_training_menu[_menu_index]['kgs'].toDouble(),
+                value: _training_set_list[_menu_index]['kgs'].toDouble(),
                 decimals: 2,
                 step: 0.25,
                 decoration: InputDecoration(
@@ -230,7 +236,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                   ),
                 ),
                 onChanged: (value) {
-                  _user_training_menu[_menu_index]['kgs'] = value;
+                  _training_set_list[_menu_index]['kgs'] = value;
                 },
               ),
             ),
@@ -240,7 +246,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
               child: SpinBox(
                 min: 1,
                 max: 500,
-                value: _user_training_menu[_menu_index]['reps'].toDouble(),
+                value: _training_set_list[_menu_index]['reps'].toDouble(),
                 decoration: InputDecoration(
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   floatingLabelAlignment: FloatingLabelAlignment.center,
@@ -256,23 +262,29 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                   ),
                 ),
                 onChanged: (value) {
-                  _user_training_menu[_menu_index]['reps'] = value.toInt();
+                  _training_set_list[_menu_index]['reps'] = value.toInt();
                 },
               ),
             ),
             const SizedBox(height: 10),
-            ElevatedButton(
-              child: Text('セット終了', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () {
-                // リストの更新処理を行う
-                _user_training_menu[_menu_index]['time'] = timeString;
-                _user_training_menu[_menu_index]['is_completed'] = true;
-                print(_user_training_menu);
-                // モーダルを閉じる
-                Navigator.of(context).pop();
-              },
-            ),
+            if (_training_set_list[_menu_index]['is_completed']) ...{
+              ElevatedButton(
+                child: Text('閉じる', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700]),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            } else ...{
+              ElevatedButton(
+                child: Text('セット完了', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  set_complete();
+                  Navigator.of(context).pop();
+                },
+              ),
+            },
             const SizedBox(height: 5),
           ]),
         ),
