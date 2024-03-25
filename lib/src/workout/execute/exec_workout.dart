@@ -10,13 +10,14 @@ import 'package:flutter_spinbox/cupertino.dart';
 import 'package:flutter_spinbox/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:liftaholic_frontend/src/common/default_value.dart';
 
-import '../common/provider.dart';
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../common/functions.dart';
-import '../planning/training_contents_modal.dart';
-import './stop_watch.dart';
+import '../../common/provider.dart';
+import '../../common/dialogs.dart';
+import '../../common/error_messages.dart';
+import '../../common/functions.dart';
+import '../training_contents_modal.dart';
+import 'stop_watch.dart';
 
 class ExecWorkoutScreen extends ConsumerStatefulWidget {
   const ExecWorkoutScreen({Key? key, required this.user_training_id}) : super(key: key);
@@ -38,8 +39,8 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
   bool _loading = false;
 
   String _training_name = '';
-  double _kgs_default = 0.25;
-  int _reps_default = 1;
+  double _kgs_default = kgsDefault;
+  int _reps_default = repsDefault;
 
   String timeString = "00:00:00";
   Stopwatch stopwatch = Stopwatch();

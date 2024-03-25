@@ -9,9 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../bottom_menu/planning.dart';
+import '../../common/dialogs.dart';
+import '../../common/error_messages.dart';
+import '../../bottom_menu/planning.dart';
 
 class CreateTrainingPlanScreen extends ConsumerStatefulWidget {
   const CreateTrainingPlanScreen({super.key});
@@ -77,7 +77,7 @@ class _CreateTrainingPlanScreenState extends ConsumerState<CreateTrainingPlanScr
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'トレーニングプラン作成',
+          '新規プラン作成',
           textAlign: TextAlign.center,
           style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
         ),

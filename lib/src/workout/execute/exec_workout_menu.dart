@@ -2,17 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../common/provider.dart';
-import '../planning/training_contents_modal.dart';
-import './exec_workout.dart';
+import '../../common/dialogs.dart';
+import '../../common/error_messages.dart';
+import '../../common/provider.dart';
+import '../../common/functions.dart';
+import '../../common/default_value.dart';
+import '../training_contents_modal.dart';
+import 'exec_workout.dart';
 
 class ExecWorkoutMenuScreen extends ConsumerStatefulWidget {
   const ExecWorkoutMenuScreen({super.key});
@@ -30,54 +33,8 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
   Map _exec_training_menu = {};
 
   // ----------------------------
-  // トレーニングプランに登録済みのトレーニングを取得する
+  // セットメニューを初期化する
   // ----------------------------
-  // Future<void> _getRegisteredTrainings(training_plan_id) async {
-  //   setState(() {
-  //     // スピナー非表示
-  //     _loading = true;
-  //   });
-
-  //   await dotenv.load(fileName: '.env');
-  //   //リクエスト先のurl
-  //   Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/get_registered_trainings/" + training_plan_id.toString());
-
-  //   try {
-  //     if (!mounted) return;
-  //     var response = await http.get(url).timeout(Duration(seconds: 10));
-
-  //     var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-  //     if (jsonResponse['statusCode'] == 200) {
-  //       setState(() {
-  //         print(jsonResponse);
-  //         // トレーニングプランの詳細をWidgetに設定
-  //         _training_plan_name = jsonResponse['training_plan']['training_plan_name'];
-  //         _training_plan_description = jsonResponse['training_plan']['training_plan_description'];
-
-  //         // トレーニングメニューのデータを作成
-  //         _trainings_registered = jsonResponse['user_training_menu'];
-  //         // 実行中か否かのフラグを入れる
-  //         for (int i = 0; i < _trainings_registered.length; i++) {
-  //           var _user_training_id = List.from(_trainings_registered.keys)[i];
-  //           _trainings_registered[_user_training_id]['is_doing'] = false;
-  //         }
-  //         print(_trainings_registered);
-  //       });
-  //     } else {
-  //       //リクエストに失敗した場合はエラーメッセージを表示
-  //       AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
-  //     }
-  //   } catch (e) {
-  //     //リクエストに失敗した場合はエラーメッセージを表示
-  //     AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
-  //   } finally {
-  //     setState(() {
-  //       // スピナー非表示
-  //       _loading = false;
-  //     });
-  //   }
-  // }
-
   void initialize_set_menu() {
     var training_obj = ref.read(userTrainingDataProvider)[ref.read(execPlanIdProvider)];
     _training_plan_name = training_obj['training_plan_name'];
@@ -92,8 +49,8 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
       if (sets_default != null) {
         for (int set = 0; set < sets_default.toInt(); set++) {
           set_list.add({
-            'reps': reps_default == null ? 1 : reps_default,
-            'kgs': kgs_default == null ? 0.25 : kgs_default,
+            'reps': reps_default == null ? repsDefault : reps_default,
+            'kgs': kgs_default == null ? kgsDefault : kgs_default,
             "time": "00:00",
             'is_completed': false,
           });
@@ -156,7 +113,7 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                             RangePointer(
                                               value: _exec_training_menu[List.from(_exec_training_menu.keys)[index]]['progress'].toDouble(),
                                               width: 0.2,
-                                              color: _exec_training_menu[List.from(_exec_training_menu.keys)[index]]['progress'].toInt() == 100 ? Colors.red : Colors.green,
+                                              color: _exec_training_menu[List.from(_exec_training_menu.keys)[index]]['progress'].toInt() == 100 ? Colors.green : Colors.green,
                                               pointerOffset: 0.1,
                                               cornerStyle: CornerStyle.bothCurve,
                                               sizeUnit: GaugeSizeUnit.factor,
@@ -166,12 +123,12 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                             GaugeAnnotation(
                                               widget: _exec_training_menu[List.from(_exec_training_menu.keys)[index]]['progress'].toInt() == 100
                                                   ? Text(
-                                                      '完', // Display the percentage value with 2 decimal places
-                                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold).copyWith(color: Colors.red),
+                                                      'clear', // Display the percentage value with 2 decimal places
+                                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
                                                     )
                                                   : Text(
                                                       _exec_training_menu[List.from(_exec_training_menu.keys)[index]]['progress'].toString() + '%', // Display the percentage value with 2 decimal places
-                                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold).copyWith(color: Colors.green),
+                                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
                                                     ),
                                               angle: 90,
                                               positionFactor: 0.5,
@@ -205,7 +162,11 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                         backgroundColor: Colors.blue, // background
                       ),
                       onPressed: () {
-                        // selectTrainingModal(context, uid, _training_plan_id, _training_menu_master);
+                        var uid = FirebaseAuth.instance.currentUser?.uid;
+                        var training_plan_id = ref.read(execPlanIdProvider);
+                        var training_menu_master = ref.read(trainingMenuMasterProvider);
+                        // メニュー追加用のモーダルを起動する
+                        selectTrainingModal(context, uid, training_plan_id, training_menu_master);
                       },
                     ),
                   ),

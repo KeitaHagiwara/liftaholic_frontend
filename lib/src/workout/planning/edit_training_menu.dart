@@ -9,26 +9,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../common/provider.dart';
-import '../common/functions.dart';
-import '../workout/training_contents_modal.dart';
-import '../workout/planning/edit_training_set.dart';
-import '../workout/execute/exec_workout_menu.dart';
+import '../../common/dialogs.dart';
+import '../../common/error_messages.dart';
+import '../../common/provider.dart';
+import '../../common/functions.dart';
+import '../training_contents_modal.dart';
+import './edit_training_set.dart';
 
-class EditTrainingPlanScreen extends ConsumerStatefulWidget {
-  const EditTrainingPlanScreen({super.key, required this.training_plan_id, required this.user_training_data});
+class EditTrainingMenuScreen extends ConsumerStatefulWidget {
+  const EditTrainingMenuScreen({super.key, required this.training_plan_id});
 
   // 画面遷移元からのデータを受け取る変数
   final String training_plan_id;
-  final Map user_training_data;
 
   @override
-  _EditTrainingPlanScreenState createState() => _EditTrainingPlanScreenState();
+  _EditTrainingMenuScreenState createState() => _EditTrainingMenuScreenState();
 }
 
-class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen> {
+class _EditTrainingMenuScreenState extends ConsumerState<EditTrainingMenuScreen> {
   // ********************
   //
   // イニシャライザ設定
@@ -236,17 +234,12 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
 
     // 受け取ったデータを状態を管理する変数に格納
     _training_plan_id = widget.training_plan_id;
-    _user_training_data = widget.user_training_data;
+    _user_training_data = ref.read(userTrainingDataProvider)[_training_plan_id];
 
     _training_plan_name = _user_training_data['training_plan_name'];
     _training_plan_description = _user_training_data['training_plan_description'];
     _user_training_menu = _user_training_data['training_menu'];
 
-    // トレーニングプランに登録済みのトレーニングメニューを取得する
-    // _getRegisteredTrainings(_training_plan_id);
-
-    // 登録済みの全トレーニングメニューを取得する
-    // _getAllTrainingMenuMaster();
   }
 
   // ********************
@@ -364,7 +357,7 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
                     SizedBox(
                       child: Text(
                         _training_plan_description,
-                        style: TextStyle().copyWith(color: Colors.white70, fontSize: 12.0),
+                        style: TextStyle(color: Colors.white70, fontSize: 12.0),
                       ),
                     ),
                   ],
@@ -378,7 +371,7 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
                             itemCount: _user_training_menu.length,
                             itemBuilder: (BuildContext context, int index) {
                               var user_training_id = List.from(_user_training_menu.keys)[index];
-                              return buildTrainingListTile(user_training_id, _user_training_menu[user_training_id]);
+                              return buildTrainingListTile(user_training_id, _user_training_menu[user_training_id], index);
                             }),
                   ),
                   // トレーニング追加ボタン
@@ -401,23 +394,23 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
                     ),
                   ),
                   // トレーニングプラン削除ボタン
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.only(left: 64, right: 64),
-                    // 横幅いっぱいに広げる
-                    width: double.infinity,
-                    // リスト追加ボタン
-                    child: ElevatedButton(
-                      child: Text('プラン削除', style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, // background
-                      ),
-                      onPressed: () {
-                        // Navigator.of(context).pop();
-                        _deleteTrainingPlanDialog(_training_plan_id, _training_plan_name);
-                      },
-                    ),
-                  ),
+                  // const SizedBox(height: 8),
+                  // Container(
+                  //   padding: EdgeInsets.only(left: 64, right: 64),
+                  //   // 横幅いっぱいに広げる
+                  //   width: double.infinity,
+                  //   // リスト追加ボタン
+                  //   child: ElevatedButton(
+                  //     child: Text('プラン削除', style: TextStyle(color: Colors.white)),
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: Colors.red, // background
+                  //     ),
+                  //     onPressed: () {
+                  //       // Navigator.of(context).pop();
+                  //       _deleteTrainingPlanDialog(_training_plan_id, _training_plan_name);
+                  //     },
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -429,7 +422,7 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
   // トレーニングリストタイル
   //
   // ********************
-  Widget buildTrainingListTile(String user_training_id, Map training) => Card(
+  Widget buildTrainingListTile(String user_training_id, Map training, int index) => Card(
         child: Slidable(
             endActionPane: ActionPane(motion: const BehindMotion(), children: [
               SlidableAction(
@@ -446,9 +439,29 @@ class _EditTrainingPlanScreenState extends ConsumerState<EditTrainingPlanScreen>
             ]),
             child: Column(children: <Widget>[
               ListTile(
-                leading: CircleAvatar(foregroundImage: AssetImage("assets/images/chest.png")),
-                title: Text(training['training_name']),
-                trailing: Text(training['kgs'].toString() + ' kg\n' + training['reps'].toString() + ' reps\n' + training['sets'].toString() + ' sets'),
+                dense: true,
+                leading: GestureDetector(
+                  onTap: () {
+                    // トレーニングアイコンのタップでトレーニング詳細を表示する
+                    var training = ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]];
+                    showTrainingContentModal(context, training);
+                  },
+                  child: CircleAvatar(
+                    // radius: 55.0,
+                    backgroundImage: AssetImage('assets/images/chest.png'),
+                  ),
+                ),
+                title: Text(
+                  training['training_name'],
+                  style: TextStyle(fontWeight: FontWeight.bold)
+                ),
+                subtitle: Text(ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['kgs'].toString() +
+                  ' kg\n' +
+                  ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['reps'].toString() +
+                  ' reps\n' +
+                  ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['sets'].toString() +
+                  ' sets'),
+                // trailing: IconButton(icon: Icon(Icons.more_horiz), onPressed: () {}),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) {

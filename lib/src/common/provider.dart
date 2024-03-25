@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // テスト用のStateProvider
 final helloWorldProvider = StateProvider<String>((ref) => 'Hello World');
 
+// ユーザーIDのStateProvider
+final userIdProvider = StateProvider<String?>((ref) => '');
+
 // 全ての元データとなるStateProvider
 final userTrainingDataProvider = StateProvider<Map>((ref) => {});
 
-// プランが存在しなかった場合の文言のStateProvider
-final planDescriptionNotFoundProvider = StateProvider<String>((ref) => 'プランの説明はありません');
+// トレーニングメニューのマスタとなるStateProvider
+final trainingMenuMasterProvider = StateProvider<Map>((ref) => {});
 
 // 登録済みトレーニングプランのStateProvider
 final registeredPlanProvider = StateProvider<List>((ref) => []);
@@ -18,6 +21,9 @@ final isDoingWorkoutProvider = StateProvider<bool>((ref) => false);
 
 // 選択中のトレーニングプランIDのStateProvider
 final selectedPlanProvider = StateProvider<int>((ref) => 0);
+
+// トレーニングプランにメニューを追加するために一時的に必要となるStateProvider
+final addTrainingMenuProvider = StateProvider<Map>((ref) => {});
 
 // 実施中のトレーニングプランIDのStateProvider
 final execPlanIdProvider = StateProvider<String>((ref) => '');

@@ -11,9 +11,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../common/functions.dart';
+import '../../common/dialogs.dart';
+import '../../common/error_messages.dart';
+import '../../common/functions.dart';
 
 class StopWatchScreen extends ConsumerStatefulWidget {
   const StopWatchScreen({Key? key, required this.user_training_id, required this.exec_training_menu, required this.index}) : super(key: key);
