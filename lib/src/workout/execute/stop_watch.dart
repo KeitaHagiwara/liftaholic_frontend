@@ -103,7 +103,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
       // リストの更新処理を行う
       _training_set_list[_menu_index]['time'] = timeString;
       _training_set_list[_menu_index]['is_completed'] = true;
-      _exec_training_menu[_user_training_id]['progress'] = calc_progress(_user_training_id, _training_set_list);
+      _exec_training_menu[_user_training_id]['progress'] = calcProgress(_training_set_list);
     });
     // Providerの値を更新する
     ref.read(execTrainingMenuProvider.notifier).state = _exec_training_menu;

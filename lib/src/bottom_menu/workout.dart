@@ -41,6 +41,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   // イニシャライザ設定
   bool _loading = false;
 
+  bool isPressed = false;
+
   String _selectedPlanId = '';
 
   // ----------------------------
@@ -131,13 +133,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/add_training_menu");
 
     Map<String, String> headers = {'content-type': 'application/json'};
-    String body = json.encode({'training_plan_id': training_plan_id, 'training_no': training_no});
+    String body = json.encode({'user_id': FirebaseAuth.instance.currentUser?.uid, 'training_plan_id': training_plan_id, 'training_no': training_no});
 
     // POSTリクエストを投げる
     try {
       http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      print(jsonResponse);
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
           // Providerの値を更新する
@@ -174,8 +177,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     });
 
     await dotenv.load(fileName: '.env');
+
+    var uid = FirebaseAuth.instance.currentUser?.uid;
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/delete_training_plan/" + training_plan_id.toString());
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/workout/delete_training_plan/" + uid.toString() + '/' + training_plan_id.toString());
 
     // POSTリクエストを投げる
     try {
@@ -188,10 +193,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       } else {
         //リクエストに失敗した場合はエラーメッセージを表示
         AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+        return null;
       }
     } catch (e) {
       //リクエストに失敗した場合はエラーメッセージを表示
       AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+      return null;
     } finally {
       // スピナー非表示
       setState(() {
@@ -235,6 +242,42 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     );
   }
 
+  // ----------------------------
+  // トレーニングプランからメニューを削除する
+  // ----------------------------
+  Future<void> _deleteFromUserTrainingMenu(training_plan_id, training_menu_id) async {
+    // スピナー表示
+    setState(() {
+      _loading = true;
+    });
+
+    var uid = FirebaseAuth.instance.currentUser?.uid;
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/workout/delete_user_training_menu/" + uid.toString() + '/' + training_menu_id.toString());
+
+    // POSTリクエストを投げる
+    try {
+      http.Response response = await http.delete(url).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      // 削除が成功したら画面をリロード
+      if (jsonResponse['statusCode'] == 200) {
+        // Providerの値を更新する
+        ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['count'] -= 1;
+        ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['training_menu'].remove(training_menu_id);
+      }
+    } catch (e) {
+      //リクエストに失敗した場合はエラーメッセージを表示
+      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+    } finally {
+      // スピナー非表示
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
   // トレーニングプランの選択により、メニューのリストにトレーニングメニューを表示する
   void _selectTrainingMenu(index) {
     setState(() {
@@ -261,47 +304,43 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   // ----------------------------
   PopupMenuItem _buildPopupMenuItem(BuildContext context, String title, IconData iconData, Color color, FontWeight fontWeight, int callbackFunctionId, Map payload) {
     return PopupMenuItem(
+        child: InkWell(
+      onTap: () async {
+        // ------ プラン編集 ------
+        if (callbackFunctionId == 1) {
+          var training_plan_id = payload['training_plan_id'].toString();
+          // プラン編集画面に遷移する
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) {
+              return EditTrainingPlanScreen(training_plan_id: training_plan_id);
+            }),
+          ).then((value) {
+            setState(() {});
+          });
+          Navigator.of(context).pop();
+          // ------ プラン削除 ------
+        } else if (callbackFunctionId == 2) {
+          var index = payload['index'];
+          _deleteTrainingPlanDialog(List.from(ref.read(userTrainingDataProvider).keys)[index].toString(), ref.watch(userTrainingDataProvider)[List.from(ref.read(userTrainingDataProvider).keys)[index]]['training_plan_name'].toString());
+          // ポップアップメニューを閉じる
+          Navigator.of(context).pop();
+          // ------ メニュー削除 ------
+        } else if (callbackFunctionId == 3) {
+          // ポップアップメニューを閉じる (削除処理よりも先に閉じないとエラーになるため)
+          Navigator.of(context).pop();
+          var trainingPlanId = payload['training_plan_id'].toString();
+          var trainingMenuId = payload['training_menu_id'].toString();
+          _deleteFromUserTrainingMenu(trainingPlanId, trainingMenuId);
+        }
+      },
       child: Row(
         children: [
-          Icon(
-            iconData,
-            color: color,
-          ),
+          Icon(iconData, color: color),
           Text(' '),
-          InkWell(
-              child: Text(title, style: TextStyle(fontWeight: fontWeight, color: color)),
-              onTap: () async {
-                // プラン編集
-                if (callbackFunctionId == 1) {
-                  var training_plan_id = payload['training_plan_id'].toString();
-                  // プラン編集画面に遷移する
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) {
-                      return EditTrainingPlanScreen(training_plan_id: training_plan_id);
-                    }),
-                  ).then((value) {
-                    setState(() {});
-                  });
-                  // プラン削除
-                } else if (callbackFunctionId == 2) {
-                  var index = payload['index'];
-                  _deleteTrainingPlanDialog(List.from(ref.read(userTrainingDataProvider).keys)[index].toString(), ref.watch(userTrainingDataProvider)[List.from(ref.read(userTrainingDataProvider).keys)[index]]['training_plan_name'].toString());
-                  // メニュー削除
-                } else if (callbackFunctionId == 3) {
-                  setState(() {
-                    var training_plan_id = payload['training_plan_id'].toString();
-                    var training_menu_id = payload['training_menu_id'].toString();
-                    // Providerの値を更新する
-                    ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['count'] -= 1;
-                    ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['training_menu'].remove(training_menu_id);
-                  });
-                }
-                // ポップアップメニューを閉じる
-                Navigator.of(context).pop();
-              })
+          Text(title, style: TextStyle(fontWeight: fontWeight, color: color)),
         ],
       ),
-    );
+    ));
   }
 
   @override
@@ -360,7 +399,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                           child: Column(
                                             children: <Widget>[
                                               ListTile(
-                                                // leading: CircleAvatar(foregroundImage: AssetImage("assets/test_user.jpeg")),
                                                 title: Text(
                                                   ref.watch(userTrainingDataProvider)[List.from(ref.read(userTrainingDataProvider).keys)[index]]['training_plan_name'].toString(),
                                                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -447,10 +485,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                                             var training = ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]];
                                                             showTrainingContentModal(context, training);
                                                           },
-                                                          child: CircleAvatar(
-                                                            // radius: 55.0,
-                                                            backgroundImage: AssetImage('assets/images/chest.png'),
-                                                          ),
+                                                          child: CircleAvatar(radius: 25, foregroundImage: NetworkImage(networkImageDomain + s3Folder + ref.read(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['part_image_file'])),
                                                         ),
                                                         title: Text(
                                                           ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['training_name'],
@@ -536,6 +571,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   //              'purpose_name': '',
   //              'purpose_comment': '',
   //              'sub_part_name': '',
+  //              'part_image_file': '',
   //              'type_name': '',
   //              'type_comment': '',
   //              'event_name': '',
@@ -598,17 +634,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     for (int i = 0; i < training_menu_master.length; i++) ...{
                       ExpansionTile(
                         title: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[700],
+                            borderRadius: BorderRadius.circular(5),
+                          ),
                           child: ListTile(
                             // dense: true,
-                            leading: CircleAvatar(backgroundImage: AssetImage('assets/images/chest.png')),
+                            leading: CircleAvatar(foregroundImage: NetworkImage(networkImageDomain + s3Folder + training_menu_master[List.from(training_menu_master.keys)[i]]['0']['part_image_file'])),
                             title: Text(
                               List.from(training_menu_master.keys)[i],
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[700],
-                            borderRadius: BorderRadius.circular(5),
                           ),
                         ),
                         children: [
@@ -634,13 +670,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                     icon: Icon(Icons.radio_button_unchecked, color: Colors.grey),
                                     onPressed: () {
                                       var training_no = List.from(List.from(training_menu_master.values)[i].keys)[i_c1].toString();
-                                      // setState(() {
-                                      //   if (ref.read(addTrainingMenuProvider).containsKey(training_no)) {
-                                      //     ref.read(addTrainingMenuProvider.notifier).state[training_no] = true;
-                                      //   } else {
-                                      //     ref.read(addTrainingMenuProvider.notifier).state[training_no] = !ref.read(addTrainingMenuProvider)[training_no];
-                                      //   }
-                                      // });
+                                      setState(() {
+                                        // if (ref.read(addTrainingMenuProvider).containsKey(training_no)) {
+                                        //   ref.read(addTrainingMenuProvider.notifier).state[training_no] = true;
+                                        // } else {
+                                        //   ref.read(addTrainingMenuProvider.notifier).state[training_no] = !ref.read(addTrainingMenuProvider)[training_no];
+                                        // }
+                                      });
                                     }),
                                 title: Text(List.from(List.from(training_menu_master.values)[i].values)[i_c1]['training_name'], style: TextStyle(fontSize: 12)),
                                 // trailing: IconButton(
@@ -660,6 +696,18 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     }
                   ],
                 )),
+
+                // ワークアウトメニューの更新ボタン
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 15),
+                  padding: EdgeInsets.only(left: 64, right: 64),
+                  width: double.infinity, // 横幅いっぱいに広げる
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    onPressed: () {},
+                    child: Text('更新', style: TextStyle(color: Colors.white)),
+                  ),
+                )
               ]),
             ),
           ),

@@ -239,7 +239,6 @@ class _EditTrainingMenuScreenState extends ConsumerState<EditTrainingMenuScreen>
     _training_plan_name = _user_training_data['training_plan_name'];
     _training_plan_description = _user_training_data['training_plan_description'];
     _user_training_menu = _user_training_data['training_menu'];
-
   }
 
   // ********************
@@ -447,20 +446,17 @@ class _EditTrainingMenuScreenState extends ConsumerState<EditTrainingMenuScreen>
                     showTrainingContentModal(context, training);
                   },
                   child: CircleAvatar(
-                    // radius: 55.0,
-                    backgroundImage: AssetImage('assets/images/chest.png'),
+                    radius: 25,
+                    foregroundImage: AssetImage('assets/images/chest.png'),
                   ),
                 ),
-                title: Text(
-                  training['training_name'],
-                  style: TextStyle(fontWeight: FontWeight.bold)
-                ),
+                title: Text(training['training_name'], style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['kgs'].toString() +
-                  ' kg\n' +
-                  ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['reps'].toString() +
-                  ' reps\n' +
-                  ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['sets'].toString() +
-                  ' sets'),
+                    ' kg\n' +
+                    ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['reps'].toString() +
+                    ' reps\n' +
+                    ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['sets'].toString() +
+                    ' sets'),
                 // trailing: IconButton(icon: Icon(Icons.more_horiz), onPressed: () {}),
                 onTap: () {
                   Navigator.of(context).push(

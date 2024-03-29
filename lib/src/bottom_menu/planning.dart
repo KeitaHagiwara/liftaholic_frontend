@@ -329,11 +329,6 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
               //                     child: Column(
               //                       children: <Widget>[
               //                         ListTile(
-              //                           // leading: CircleAvatar(
-              //                           //   child: Text((index + 1).toString()),
-              //                           //   backgroundColor: Colors.blue,
-              //                           // ),
-              //                           // leading: CircleAvatar(foregroundImage: AssetImage("assets/test_user.jpeg")),
               //                           title: Text(
               //                             _userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_name'].toString(),
               //                             style: TextStyle(fontWeight: FontWeight.bold),

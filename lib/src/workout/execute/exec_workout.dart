@@ -1,21 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 
-// import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_spinbox/cupertino.dart';
-import 'package:flutter_spinbox/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_spinbox/material.dart';
+// import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:liftaholic_frontend/src/common/default_value.dart';
 
-import '../../common/provider.dart';
-import '../../common/dialogs.dart';
-import '../../common/error_messages.dart';
-import '../../common/functions.dart';
+import 'package:liftaholic_frontend/src/common/default_value.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/common/functions.dart';
 import '../training_contents_modal.dart';
 import 'stop_watch.dart';
 
@@ -39,61 +36,12 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
   bool _loading = false;
 
   String _training_name = '';
-  double _kgs_default = kgsDefault;
-  int _reps_default = repsDefault;
-
-  String timeString = "00:00:00";
-  Stopwatch stopwatch = Stopwatch();
-  late Timer timer;
+  String _intervalStr = intervalDefault;
+  Duration _intervalTimer = Duration(minutes: 1);
 
   // テキストフィールドのコントローラーを設定する
-  final TextEditingController _resp_controller = TextEditingController();
-  final TextEditingController _kgs_controller = TextEditingController();
-
-  // ********************
-  // サーバーアクセス処理
-  // ********************
-  // Future<void> _getUserTrainingMenu(_user_training_id) async {
-  //   // スピナー表示
-  //   setState(() {
-  //     _loading = true;
-  //   });
-
-  //   await dotenv.load(fileName: '.env');
-  //   //リクエスト先のurl
-  //   Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/workout/get_user_training_menu/" + _user_training_id.toString());
-
-  //   try {
-  //     if (!mounted) return;
-  //     var response = await http.get(url).timeout(Duration(seconds: 10));
-
-  //     var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-  //     if (jsonResponse['statusCode'] == 200) {
-  //       print(jsonResponse);
-  //       setState(() {
-  //         // スピナー非表示
-  //         _training = jsonResponse['training'];
-  //         _training_name = _training['training_name'];
-  //         _kgs_default = _training['kgs_default'];
-  //         _reps_default = _training['reps_default'];
-  //         _user_training_menu = jsonResponse['user_training_menu'];
-  //         print(_training);
-  //         print(_user_training_menu);
-  //       });
-  //     } else {
-  //       //リクエストに失敗した場合はエラーメッセージを表示
-  //       AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
-  //     }
-  //   } catch (e) {
-  //     //リクエストに失敗した場合はエラーメッセージを表示
-  //     AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
-  //   } finally {
-  //     setState(() {
-  //       // スピナー非表示
-  //       _loading = false;
-  //     });
-  //   }
-  // }
+  // final TextEditingController _resp_controller = TextEditingController();
+  // final TextEditingController _kgs_controller = TextEditingController();
 
   // ---------------------------
   // トレーニングのセットを削除する
@@ -139,7 +87,7 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                 onPressed: () {
                   setState(() {
                     _training_set_list.removeAt(index);
-                    _exec_training_menu[_user_training_id]['progress'] = calc_progress(_user_training_id, _training_set_list);
+                    _exec_training_menu[_user_training_id]['progress'] = calcProgress(_training_set_list);
                   });
                   Navigator.of(context_modal).pop();
                 },
@@ -151,7 +99,7 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
     } else {
       setState(() {
         _training_set_list.removeAt(index);
-        _exec_training_menu[_user_training_id]['progress'] = calc_progress(_user_training_id, _training_set_list);
+        _exec_training_menu[_user_training_id]['progress'] = calcProgress(_training_set_list);
       });
     }
     // Providerの値を更新する
@@ -165,8 +113,11 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
     _user_training_id = widget.user_training_id;
     _exec_training_menu = ref.read(execTrainingMenuProvider);
     _training_name = _exec_training_menu[_user_training_id]['training_name'];
-    _reps_default = _exec_training_menu[_user_training_id]['reps'];
-    _kgs_default = _exec_training_menu[_user_training_id]['kgs'];
+    _intervalStr = _exec_training_menu[_user_training_id]['interval'];
+    // タイマーの値に設定値を埋め込む
+    var initialInterval = getIntervalDuration(_intervalStr);
+    _intervalTimer = Duration(minutes: initialInterval['interval_min'], seconds: initialInterval['interval_sec']);
+
   }
 
   // データを元に表示するWidget
@@ -233,6 +184,52 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                                           ],
                                         )));
                               })),
+
+                  // インターバル設定ボタン
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: EdgeInsets.only(left: 64, right: 64),
+                    // 横幅いっぱいに広げる
+                    width: double.infinity,
+                    // キャンセルボタン
+                    child: CupertinoButton(
+                        // ボタンをクリックした時の処理
+                        onPressed: () {
+                          showModalBottomSheet(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                              context: context,
+                              builder: (BuildContext builder) {
+                                return Container(
+                                    height: MediaQuery.of(context).copyWith().size.height / 4,
+                                    child: SizedBox.expand(
+                                      // height: double.infinity,
+                                      // width: double.infinity,
+                                      child: CupertinoTimerPicker(
+                                        mode: CupertinoTimerPickerMode.ms,
+                                        minuteInterval: 1,
+                                        secondInterval: 1,
+                                        initialTimerDuration: _intervalTimer,
+                                        onTimerDurationChanged: (Duration changedtimer) {
+                                          setState(() {
+                                            _intervalTimer = changedtimer;
+                                          });
+                                        },
+                                      ),
+                                    ));
+                              });
+                        },
+                        // style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('セット間インターバル: ', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                            Text(_intervalTimer.toString().split('.').first.split(':')[1] + ':' + _intervalTimer.toString().split('.').first.split(':')[2] + '', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
+                          ],
+                        )),
+                  ),
+
                   // セット追加ボタン
                   const SizedBox(height: 8),
                   Container(
@@ -248,31 +245,15 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                           _exec_training_menu[_user_training_id]['sets_achieve'].add({'reps': _exec_training_menu[_user_training_id]['reps'], 'kgs': _exec_training_menu[_user_training_id]['kgs'], 'time': '00:00', 'is_completed': false});
                           // プログレスの数値を再計算する
                           var _training_set_list = _exec_training_menu[_user_training_id]['sets_achieve'];
-                          _exec_training_menu[_user_training_id]['progress'] = calc_progress(_user_training_id, _training_set_list);
+                          _exec_training_menu[_user_training_id]['progress'] = calcProgress(_training_set_list);
                           // Providerの値を更新する
                           ref.read(execTrainingMenuProvider.notifier).state = _exec_training_menu;
                         });
                       },
-                      child: Text('セット追加', style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                      child: Text('セット追加', style: TextStyle(color: Colors.white)),
                     ),
                   ),
-                  // 完了ボタン -> 一旦不要
-                  // const SizedBox(height: 8),
-                  // Container(
-                  //   padding: EdgeInsets.only(left: 64, right: 64),
-                  //   // 横幅いっぱいに広げる
-                  //   width: double.infinity,
-                  //   // キャンセルボタン
-                  //   child: ElevatedButton(
-                  //     // ボタンをクリックした時の処理
-                  //     onPressed: () {
-                  //       print('done!');
-                  //     },
-                  //     child: Text('種目完了', style: TextStyle(color: Colors.white)),
-                  //     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  //   ),
-                  // ),
                 ],
               ),
             ),

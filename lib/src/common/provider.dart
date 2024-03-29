@@ -34,6 +34,9 @@ final execTrainingMenuProvider = StateProvider<Map>((ref) => {});
 // 選択中のプランのトレーニングメニューのStateProvider
 final selectedTrainingMenuProvider = StateProvider<Map>((ref) => {});
 
+// セット間のインターバルのStateProvider（初期値は1分で設定）
+final intervalTimerProvider = StateProvider<Duration>((ref) => Duration(minutes: 1));
+
 // ワークアウト開始時間
 final workoutStartTimeProvider = StateProvider<DateTime>((ref) => DateTime.now());
 

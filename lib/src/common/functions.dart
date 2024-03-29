@@ -8,22 +8,52 @@ import '../workout/training_contents_modal.dart';
 // プログレスの数値を計算する
 // ---------------------------
 // ・params
-//   - _user_training_id: String
-//   - _training_set_list: List
+//   - trainingSetList: List
 //     exp) [{reps: 3, kgs: 70.0, time: 00:00, is_completed: true}, {reps: 3, kgs: 70.0, time: 00:00, is_completed: false}]
 //
 // ・return
 //   - progress: int
 //
-int calc_progress(String _user_training_id, List _training_set_list) {
+int calcProgress(List trainingSetList) {
   var progress = 0.0;
-  var p_unit = 100 / _training_set_list.length;
-  for (int i = 0; i < _training_set_list.length; i++) {
-    if (_training_set_list[i]['is_completed']) {
+  var p_unit = 100 / trainingSetList.length;
+  for (int i = 0; i < trainingSetList.length; i++) {
+    if (trainingSetList[i]['is_completed']) {
       progress += p_unit;
     }
   }
   return progress.ceil();
+}
+
+// ---------------------------
+// Durationの時間を分と秒に分ける
+// ---------------------------
+// ・params
+//   - intervalStr: String
+//
+// ・return
+//   - result: Map
+//
+Map getIntervalDuration(intervalStr) {
+  // 先頭が0だったら除外する
+  return {'interval_min': trimZero(intervalStr.split(':')[0]), 'interval_sec': trimZero(intervalStr.split(':')[1])};
+}
+
+// ---------------------------
+// 先頭文字が0だった場合はトリムする
+// ---------------------------
+// ・params
+//   - intervalStr: String
+//
+// ・return
+//   - int.parse(trimStr): int
+//
+int trimZero(intervalStr) {
+  var trimStr = intervalStr;
+  if (trimStr[0] == '0') {
+    trimStr = intervalStr[1];
+  }
+  return int.parse(trimStr);
 }
 
 // ---------------------------
@@ -132,11 +162,12 @@ void selectTrainingModal(context, uid, plan_id, training_menu_master) {
                             ]),
                             child: ListTile(
                               dense: true,
-                              title: Text(
-                                List.from(List.from(training_menu_master.values)[i].values)[i_c1]['training_name'],
-                                style: TextStyle(fontSize: 12)
-                              ),
-                              trailing: IconButton(icon: Icon(Icons.add), onPressed: (){print('pressed');}),
+                              title: Text(List.from(List.from(training_menu_master.values)[i].values)[i_c1]['training_name'], style: TextStyle(fontSize: 12)),
+                              trailing: IconButton(
+                                  icon: Icon(Icons.add),
+                                  onPressed: () {
+                                    print('pressed');
+                                  }),
                               onTap: () {
                                 // トレーニングのコンテンツのモーダルを表示する
                                 showTrainingContentModal(context, List.from(List.from(training_menu_master.values)[i].values)[i_c1]);
