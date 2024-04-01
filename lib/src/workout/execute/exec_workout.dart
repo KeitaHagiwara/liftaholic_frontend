@@ -13,8 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:liftaholic_frontend/src/common/default_value.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 import 'package:liftaholic_frontend/src/common/functions.dart';
-import '../training_contents_modal.dart';
-import 'stop_watch.dart';
+import 'package:liftaholic_frontend/src/workout/training_contents_modal.dart';
+import 'package:liftaholic_frontend/src/workout/execute/stop_watch.dart';
 
 class ExecWorkoutScreen extends ConsumerStatefulWidget {
   const ExecWorkoutScreen({Key? key, required this.user_training_id}) : super(key: key);
@@ -117,7 +117,6 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
     // タイマーの値に設定値を埋め込む
     var initialInterval = getIntervalDuration(_intervalStr);
     _intervalTimer = Duration(minutes: initialInterval['interval_min'], seconds: initialInterval['interval_sec']);
-
   }
 
   // データを元に表示するWidget
@@ -271,6 +270,63 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
         return StopWatchScreen(user_training_id: _user_training_id, exec_training_menu: _exec_training_menu, index: index);
       },
     ).then((value) {
+      print(value);
+      // valueは完了有無のbooleanを返却する
+      if (value != null) {
+        // インターバルタイマーのモーダルを表示する
+        var all_complete = true;
+        var training_name = _exec_training_menu[_user_training_id]['training_name'];
+        var interval = _exec_training_menu[_user_training_id]['interval'];
+        print(_exec_training_menu[_user_training_id]['sets_achieve']);
+        for (var i = 0; i < _exec_training_menu[_user_training_id]['sets_achieve'].length; i++) {
+          if (!_exec_training_menu[_user_training_id]['sets_achieve'][i]['is_completed']) {
+            all_complete = false;
+          }
+        }
+
+        // 全てのセットが完了してない場合、インターバルのポップアップを表示する
+        if (!all_complete) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context_modal) {
+              return AlertDialog(
+                title: Text('インターバル', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                content: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text(interval, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 36)),
+                ]),
+                actions: [
+                  TextButton(
+                    child: Text("終了"),
+                    onPressed: () {
+                      // 確認モーダルを削除する
+                      Navigator.of(context_modal).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          showDialog(
+              context: context,
+              builder: (BuildContext context_modal) {
+                return AlertDialog(
+                  title: Text('トレーニングメニュー完了', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  content: Text(training_name + 'の全セットが完了しました。\nお疲れ様でした🎉', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  actions: [
+                    TextButton(
+                      child: Text("OK"),
+                      onPressed: () {
+                        // 確認モーダルを削除する
+                        Navigator.of(context_modal).pop();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              });
+        }
+      }
       // 実績を更新する -> これがないと画面が更新されない
       setState(() {});
     });

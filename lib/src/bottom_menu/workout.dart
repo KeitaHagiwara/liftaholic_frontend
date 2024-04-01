@@ -7,17 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+// import 'package:flutter_slidable/flutter_slidable.dart';
 
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../common/provider.dart';
-import '../common/default_value.dart';
-import '../workout/execute/exec_workout_menu.dart';
-import '../workout/training_contents_modal.dart';
-import '../workout/planning/create_training_plan.dart';
-import '../workout/planning/edit_training_plan.dart';
-import '../workout/planning/edit_training_set.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
+import 'package:liftaholic_frontend/src/common/error_messages.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/common/default_value.dart';
+import 'package:liftaholic_frontend/src/workout/execute/exec_workout_menu.dart';
+import 'package:liftaholic_frontend/src/workout/training_contents_modal.dart';
+import 'package:liftaholic_frontend/src/workout/select_training_menu_modal.dart';
+import 'package:liftaholic_frontend/src/workout/planning/create_training_plan.dart';
+import 'package:liftaholic_frontend/src/workout/planning/edit_training_plan.dart';
+import 'package:liftaholic_frontend/src/workout/planning/edit_training_set.dart';
 
 class Choice {
   const Choice({this.title, this.icon});
@@ -127,28 +128,77 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   // ----------------------------
   // トレーニングプランにメニューを追加する
   // ----------------------------
-  Future<void> _addTrainingMenu(training_plan_id, training_no) async {
+  // Future<void> _addTrainingMenu(training_plan_id, training_no) async {
+  //   setState(() {
+  //     // スピナー表示
+  //     _loading = true;
+  //   });
+
+  //   await dotenv.load(fileName: '.env');
+  //   //リクエスト先のurl
+  //   Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/add_training_menu");
+
+  //   Map<String, String> headers = {'content-type': 'application/json'};
+  //   String body = json.encode({'user_id': FirebaseAuth.instance.currentUser?.uid, 'training_plan_id': training_plan_id, 'training_no': training_no});
+
+  //   // POSTリクエストを投げる
+  //   try {
+  //     http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
+
+  //     var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+  //     print(jsonResponse);
+  //     if (jsonResponse['statusCode'] == 200) {
+  //       setState(() {
+  //         // Providerの値を更新する
+  //         ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['count'] += 1;
+  //         ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['training_menu'][jsonResponse['add_user_training_id'][0].toString()] = jsonResponse['add_data'];
+  //         //リクエストに失敗した場合はエラーメッセージを表示
+  //         AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
+  //       });
+  //     } else if (jsonResponse['statusCode'] == 409) {
+  //       //リクエストに失敗した場合はエラーメッセージを表示
+  //       AlertDialogTemplate(context, '登録済み', jsonResponse['statusMessage']);
+  //     } else {
+  //       //リクエストに失敗した場合はエラーメッセージを表示
+  //       AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+  //     }
+  //   } catch (e) {
+  //     //リクエストに失敗した場合はエラーメッセージを表示
+  //     AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+  //   } finally {
+  //     setState(() {
+  //       // スピナー非表示
+  //       _loading = false;
+  //     });
+  //   }
+  // }
+
+  Future<void> _saveTrainingMenu() async {
+    setState(() {
+      // スピナー表示
+      _loading = true;
+    });
+
+    var uid = FirebaseAuth.instance.currentUser?.uid;
+
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/add_training_menu");
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/workout/update_training_menu");
 
     Map<String, String> headers = {'content-type': 'application/json'};
-    String body = json.encode({'user_id': FirebaseAuth.instance.currentUser?.uid, 'training_plan_id': training_plan_id, 'training_no': training_no});
+    String body = json.encode({'user_id': uid, 'training_plan_id': ref.read(execPlanIdProvider), 'training_master': ref.read(trainingMenuMasterProvider)});
 
     // POSTリクエストを投げる
     try {
       http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
 
       var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      print(jsonResponse);
       if (jsonResponse['statusCode'] == 200) {
-        setState(() {
-          // Providerの値を更新する
-          ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['count'] += 1;
-          ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['training_menu'][jsonResponse['add_user_training_id'][0].toString()] = jsonResponse['add_data'];
-          //リクエストに失敗した場合はエラーメッセージを表示
-          AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
-        });
+        // Providerの値を更新する
+        ref.read(userTrainingDataProvider.notifier).state = jsonResponse['user_training_data'];
+        ref.read(execTrainingMenuProvider.notifier).state = ref.read(userTrainingDataProvider)[ref.read(execPlanIdProvider)]['training_menu'];
+
+        AlertDialogTemplate(context, 'トレーニングメニュー更新', jsonResponse['statusMessage']);
       } else if (jsonResponse['statusCode'] == 409) {
         //リクエストに失敗した場合はエラーメッセージを表示
         AlertDialogTemplate(context, '登録済み', jsonResponse['statusMessage']);
@@ -287,6 +337,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     // Providerに値を格納する
     ref.read(execPlanIdProvider.notifier).state = _selectedPlanId;
     ref.read(execTrainingMenuProvider.notifier).state = ref.read(userTrainingDataProvider)[_selectedPlanId]['training_menu'];
+  }
+
+  updateUserTrainingMenu(Map trainingMenuMaster) {
+    // トレーニングメニューを更新する
+    _saveTrainingMenu();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -455,7 +511,16 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                     onPressed: ref.read(execPlanIdProvider) == ''
                                         ? null
                                         : () {
-                                            selectTrainingModal(context, FirebaseAuth.instance.currentUser?.uid, ref.read(execPlanIdProvider), ref.read(trainingMenuMasterProvider));
+                                            // selectTrainingModal(context, FirebaseAuth.instance.currentUser?.uid, ref.read(execPlanIdProvider), ref.read(trainingMenuMasterProvider));
+                                            showModalBottomSheet(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return StatefulBottomSheet(
+                                                    userTrainingMenu: ref.read(userTrainingDataProvider)[ref.read(execPlanIdProvider)]['training_menu'],
+                                                    trainingMenuMaster: ref.read(trainingMenuMasterProvider),
+                                                    valueChanged: updateUserTrainingMenu,
+                                                  );
+                                                });
                                           })
                               ]),
                             ),
@@ -555,164 +620,5 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                           ]))
                 : ExecWorkoutMenuScreen() // ワークアウト実施中の場合
         );
-  }
-
-  // ---------------------------
-  // トレーニングメニューのモーダルを作成する
-  // ---------------------------
-  // ・params
-  //   - uid: String
-  //   - plan_id: String
-  //   - training_menu_master: Map<String, dynamic>
-  //     exp) '腕': {
-  //            '1': {
-  //              'training_name': '腕トレ１',
-  //              'description': '',
-  //              'purpose_name': '',
-  //              'purpose_comment': '',
-  //              'sub_part_name': '',
-  //              'part_image_file': '',
-  //              'type_name': '',
-  //              'type_comment': '',
-  //              'event_name': '',
-  //              'event_comment': ''
-  //            },
-  //          };
-  //
-  // ・return
-  //   - void
-  //
-  void selectTrainingModal(context, uid, plan_id, training_menu_master) {
-    showModalBottomSheet(
-      isScrollControlled: true,
-      context: context,
-      builder: (BuildContext context) {
-        return SizedBox(
-          height: 800,
-          width: double.infinity,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(5),
-              child: Column(children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                      icon: Icon(Icons.cancel),
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Close the sheet.
-                      }),
-                ),
-                Container(
-                  margin: EdgeInsets.only(bottom: 15),
-                  width: double.infinity,
-                  child: Text(
-                    'トレーニングを選択',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18),
-                  ),
-                ),
-                // // 検索ボックス
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(
-                //     vertical: 12,
-                //     horizontal: 36,
-                //   ),
-                //   child: TextField(
-                //     style: TextStyle(
-                //       fontSize: 14,
-                //       color: Colors.white,
-                //     ),
-                //     decoration: InputDecoration(
-                //       // ← InputDecorationを渡す
-                //       hintText: '検索ワードを入力してください',
-                //     ),
-                //   ),
-                // ),
-                SizedBox(
-                    child: Column(
-                  children: [
-                    for (int i = 0; i < training_menu_master.length; i++) ...{
-                      ExpansionTile(
-                        title: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[700],
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: ListTile(
-                            // dense: true,
-                            leading: CircleAvatar(foregroundImage: NetworkImage(networkImageDomain + s3Folder + training_menu_master[List.from(training_menu_master.keys)[i]]['0']['part_image_file'])),
-                            title: Text(
-                              List.from(training_menu_master.keys)[i],
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                        children: [
-                          for (int i_c1 = 0; i_c1 < training_menu_master[List.from(training_menu_master.keys)[i]].length; i_c1++) ...{
-                            Slidable(
-                              startActionPane: ActionPane(motion: const ScrollMotion(), children: [
-                                SlidableAction(
-                                    borderRadius: BorderRadius.only(topLeft: Radius.circular(10), bottomLeft: Radius.circular(10)),
-                                    backgroundColor: Colors.green,
-                                    icon: Icons.add,
-                                    label: '追加',
-                                    onPressed: (context) {
-                                      // トレーニングIDを取得する
-                                      var training_no = List.from(List.from(training_menu_master.values)[i].keys)[i_c1];
-                                      // プランにトレーニングメニューを追加する
-                                      _addTrainingMenu(plan_id, training_no);
-                                    })
-                              ]),
-                              child: ListTile(
-                                dense: true,
-                                leading: IconButton(
-                                    // icon: ref.read(addTrainingMenuProvider).containsKey(List.from(List.from(training_menu_master.values)[i].keys)[i_c1].toString()) ? Icon(Icons.radio_button_checked, color: Colors.green) : Icon(Icons.radio_button_unchecked, color: Colors.grey),
-                                    icon: Icon(Icons.radio_button_unchecked, color: Colors.grey),
-                                    onPressed: () {
-                                      var training_no = List.from(List.from(training_menu_master.values)[i].keys)[i_c1].toString();
-                                      setState(() {
-                                        // if (ref.read(addTrainingMenuProvider).containsKey(training_no)) {
-                                        //   ref.read(addTrainingMenuProvider.notifier).state[training_no] = true;
-                                        // } else {
-                                        //   ref.read(addTrainingMenuProvider.notifier).state[training_no] = !ref.read(addTrainingMenuProvider)[training_no];
-                                        // }
-                                      });
-                                    }),
-                                title: Text(List.from(List.from(training_menu_master.values)[i].values)[i_c1]['training_name'], style: TextStyle(fontSize: 12)),
-                                // trailing: IconButton(
-                                //     icon: Icon(Icons.add_circle, color: Colors.blue),
-                                //     onPressed: () {
-                                //       print('pressed');
-                                //     }),
-                                onTap: () {
-                                  // トレーニングのコンテンツのモーダルを表示する
-                                  showTrainingContentModal(context, List.from(List.from(training_menu_master.values)[i].values)[i_c1]);
-                                },
-                              ),
-                            )
-                          }
-                        ],
-                      )
-                    }
-                  ],
-                )),
-
-                // ワークアウトメニューの更新ボタン
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 15),
-                  padding: EdgeInsets.only(left: 64, right: 64),
-                  width: double.infinity, // 横幅いっぱいに広げる
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                    onPressed: () {},
-                    child: Text('更新', style: TextStyle(color: Colors.white)),
-                  ),
-                )
-              ]),
-            ),
-          ),
-        );
-      },
-    );
   }
 }

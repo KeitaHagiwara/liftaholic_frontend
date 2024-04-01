@@ -27,6 +27,8 @@ class StopWatchScreen extends ConsumerStatefulWidget {
 }
 
 class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
+  bool _setComplete = false;
+
   String timeString = "00:00";
   Stopwatch stopwatch = Stopwatch();
   late Timer timer;
@@ -78,7 +80,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
           });
           stopwatch.stop();
           // モーダルを閉じる
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(null);
         },
       );
       ConfirmDialogTemplate(context, callbackButton, 'リセット', 'トレーニングは実施中です。タイマーをリセットしてもよろしいですか？');
@@ -104,6 +106,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
       _training_set_list[_menu_index]['time'] = timeString;
       _training_set_list[_menu_index]['is_completed'] = true;
       _exec_training_menu[_user_training_id]['progress'] = calcProgress(_training_set_list);
+      _setComplete = true;
     });
     // Providerの値を更新する
     ref.read(execTrainingMenuProvider.notifier).state = _exec_training_menu;
@@ -137,23 +140,23 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                     if (stopwatch.isRunning) {
                       AlertDialogTemplate(context, CFM_MSG_TITLE, 'トレーニング実施中です。タイマーを停止してから閉じてください。');
                     } else {
-                      Navigator.pop(context); // Close the sheet.
+                      Navigator.of(context).pop(null);
                     }
                   }),
             ),
             SizedBox(
               width: double.infinity,
               child: _training_set_list[_menu_index]['is_completed']
-                ? Text(
-                    (_menu_index + 1).toString() + 'セット目は完了しています',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.green, fontSize: 18.0),
-                  )
-                : Text(
-                    (_menu_index + 1).toString() + 'セット目',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-                  ),
+                  ? Text(
+                      (_menu_index + 1).toString() + 'セット目は完了しています',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.green, fontSize: 18.0),
+                    )
+                  : Text(
+                      (_menu_index + 1).toString() + 'セット目',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                    ),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -168,11 +171,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Icon(Icons.timer, size: 60, color: Colors.grey.shade800),
-                    if (_training_set_list[_menu_index]['is_completed']) ...{
-                      Text(_training_set_list[_menu_index]['time'], style: TextStyle(fontSize: 40, color: Colors.grey.shade900))
-                    } else ...{
-                      Text(timeString, style: TextStyle(fontSize: 40, color: Colors.grey.shade900))
-                    }
+                    if (_training_set_list[_menu_index]['is_completed']) ...{Text(_training_set_list[_menu_index]['time'], style: TextStyle(fontSize: 40, color: Colors.grey.shade900))} else ...{Text(timeString, style: TextStyle(fontSize: 40, color: Colors.grey.shade900))}
                   ],
                 ),
               ),
@@ -184,10 +183,10 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                 children: <Widget>[
                   TextButton(
                       onPressed: _training_set_list[_menu_index]['is_completed']
-                        ? null
-                        : () {
-                            reset();
-                          },
+                          ? null
+                          : () {
+                              reset();
+                            },
                       child: Container(
                         height: 70,
                         width: 70,
@@ -198,10 +197,10 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                       )),
                   TextButton(
                       onPressed: _training_set_list[_menu_index]['is_completed']
-                        ? null
-                        : () {
-                            stopwatch.isRunning ? stop() : start();
-                          },
+                          ? null
+                          : () {
+                              stopwatch.isRunning ? stop() : start();
+                            },
                       child: Container(
                         height: 70,
                         width: 70,
@@ -272,7 +271,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                 child: Text('閉じる', style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700]),
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(null);
                 },
               ),
             } else ...{
@@ -281,7 +280,8 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
                   set_complete();
-                  Navigator.of(context).pop();
+                  var result = {'set': _menu_index + 1};
+                  Navigator.of(context).pop(result);
                 },
               ),
             },

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:collection';
 
-// import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -9,14 +9,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../common/dialogs.dart';
-import '../common/error_messages.dart';
-import '../common/provider.dart';
-import '../common/default_value.dart';
-import '../workout/planning/create_training_plan.dart';
-import '../planning/edit_training_plan.dart';
-import '../planning/show_calendar_modal.dart';
-import '../firebase/user_info.dart';
+import 'package:liftaholic_frontend/src//common/dialogs.dart';
+import 'package:liftaholic_frontend/src//common/error_messages.dart';
+import 'package:liftaholic_frontend/src//planning/show_calendar_modal.dart';
+import 'package:liftaholic_frontend/src//firebase/user_info.dart';
+import 'package:liftaholic_frontend/src//mypage/line_chart_2.dart';
 
 class PlanningScreen extends ConsumerStatefulWidget {
   const PlanningScreen({super.key});
@@ -245,256 +242,248 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
       // ),
       body: _loading
           ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
-          : Container(
+          : Center(
               // child: _userTrainingData.length == 0
               //     ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.public_off, size: 50)]))
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              // --------------------
-              // アニメーションここから
-              // --------------------
-              // Lottie.network(
-              //   // 'https://lottie.host/84241c93-f84c-4133-9d2b-4eeff328313a/XPxdU0Zv81.json',
-              //   // 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
-              //   'https://lottie.host/808890fb-72b9-4685-a6c4-e53abb13faeb/A5Pzml6y3B.json',
-              //   width: 300,
-              //   errorBuilder: (context, error, stackTrace) {
-              //     return const Padding(
-              //       padding: EdgeInsets.all(30.0),
-              //       child: CircularProgressIndicator(),
-              //     );
-              //   },
-              // ),
-              // --------------------
-              // アニメーションここまで
-              // --------------------
+              child: ListView(
+                  // mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                  // --------------------
+                  // アニメーションここから
+                  // --------------------
+                  // Lottie.network(
+                  //   // 'https://lottie.host/84241c93-f84c-4133-9d2b-4eeff328313a/XPxdU0Zv81.json',
+                  //   // 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
+                  //   'https://lottie.host/808890fb-72b9-4685-a6c4-e53abb13faeb/A5Pzml6y3B.json',
+                  //   width: 300,
+                  //   errorBuilder: (context, error, stackTrace) {
+                  //     return const Padding(
+                  //       padding: EdgeInsets.all(30.0),
+                  //       child: CircularProgressIndicator(),
+                  //     );
+                  //   },
+                  // ),
+                  // --------------------
+                  // アニメーションここまで
+                  // --------------------
 
-              // --------------------
-              // プランここから
-              // --------------------
-              // Container(
-              //     margin: EdgeInsets.only(left: 15),
-              //     alignment: Alignment.centerLeft, //任意のプロパティ
-              //     width: double.infinity,
-              //     child: Text(
-              //       'トレーニングプラン',
-              //       style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-              //     )),
-              // SizedBox(
-              //   height: 150,
-              //   child: ListView.builder(
-              //     scrollDirection: Axis.horizontal,
-              //     itemCount: _userTrainingData.length,
-              //     itemBuilder: (context, index) {
-              //       return Card(
-              //           child: List.from(_userTrainingData.keys)[index] == 'add_training_plan'
-              //               ? InkWell(
-              //                   onTap: () async {
-              //                     // リスト追加画面から渡される値を受け取る
-              //                     final _newPlan = await Navigator.of(context).push(
-              //                       MaterialPageRoute(builder: (context) {
-              //                         // 遷移先の画面としてリスト追加画面を指定
-              //                         return CreateTrainingPlanScreen();
-              //                       }),
-              //                     );
-              //                     if (_newPlan != null) {
-              //                       setState(() {
-              //                         // トレーニングプランに追加する
-              //                         _userTrainingData[_newPlan['plan_id']] = _newPlan['trainings'];
-              //                         // plan_idでソートする
-              //                         _userTrainingData = SplayTreeMap.from(_userTrainingData, (a, b) => a.compareTo(b));
-              //                       });
-              //                       // Providerにデータを保存する
-              //                       ref.read(userTrainingDataProvider.notifier).state = _userTrainingData;
-              //                     }
-              //                   },
-              //                   child: Container(width: 180, child: Icon(Icons.add_circle, color: Colors.blue)))
-              //               : InkWell(
-              //                   onTap: () async {
-              //                     var training_plan_id = List.from(_userTrainingData.keys)[index].toString();
-              //                     final delete_plan_id = await Navigator.of(context).push(
-              //                       MaterialPageRoute(builder: (context) {
-              //                         return EditTrainingPlanScreen(training_plan_id: training_plan_id, user_training_data: _userTrainingData[training_plan_id]);
-              //                       }),
-              //                     );
-              //                     if (delete_plan_id != null) {
-              //                       setState(() {
-              //                         _userTrainingData.remove(delete_plan_id.toString());
-              //                       });
-              //                       // Providerにデータを保存する
-              //                       ref.read(userTrainingDataProvider.notifier).state = _userTrainingData;
-              //                     }
-              //                   },
-              //                   child: Container(
-              //                     width: 180,
-              //                     child: Column(
-              //                       children: <Widget>[
-              //                         ListTile(
-              //                           title: Text(
-              //                             _userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_name'].toString(),
-              //                             style: TextStyle(fontWeight: FontWeight.bold),
-              //                           ),
-              //                           subtitle: _userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_description'].toString() == ''
-              //                               ? Text(planDescriptionNotFound + '\n' + _userTrainingData[List.from(_userTrainingData.keys)[index]]['count'].toString() + ' trainings')
-              //                               : Text(_userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_description'].toString() + '\n' + _userTrainingData[List.from(_userTrainingData.keys)[index]]['count'].toString() + ' trainings'),
-              //                           trailing: Icon(Icons.arrow_forward_ios_rounded),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                   ),
-              //                 ));
-              //     },
-              //   ),
-              // ),
-              // --------------------
-              // プランここまで
-              // --------------------
+                  // --------------------
+                  // プランここから
+                  // --------------------
+                  // Container(
+                  //     margin: EdgeInsets.only(left: 15),
+                  //     alignment: Alignment.centerLeft, //任意のプロパティ
+                  //     width: double.infinity,
+                  //     child: Text(
+                  //       'トレーニングプラン',
+                  //       style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                  //     )),
+                  // SizedBox(
+                  //   height: 150,
+                  //   child: ListView.builder(
+                  //     scrollDirection: Axis.horizontal,
+                  //     itemCount: _userTrainingData.length,
+                  //     itemBuilder: (context, index) {
+                  //       return Card(
+                  //           child: List.from(_userTrainingData.keys)[index] == 'add_training_plan'
+                  //               ? InkWell(
+                  //                   onTap: () async {
+                  //                     // リスト追加画面から渡される値を受け取る
+                  //                     final _newPlan = await Navigator.of(context).push(
+                  //                       MaterialPageRoute(builder: (context) {
+                  //                         // 遷移先の画面としてリスト追加画面を指定
+                  //                         return CreateTrainingPlanScreen();
+                  //                       }),
+                  //                     );
+                  //                     if (_newPlan != null) {
+                  //                       setState(() {
+                  //                         // トレーニングプランに追加する
+                  //                         _userTrainingData[_newPlan['plan_id']] = _newPlan['trainings'];
+                  //                         // plan_idでソートする
+                  //                         _userTrainingData = SplayTreeMap.from(_userTrainingData, (a, b) => a.compareTo(b));
+                  //                       });
+                  //                       // Providerにデータを保存する
+                  //                       ref.read(userTrainingDataProvider.notifier).state = _userTrainingData;
+                  //                     }
+                  //                   },
+                  //                   child: Container(width: 180, child: Icon(Icons.add_circle, color: Colors.blue)))
+                  //               : InkWell(
+                  //                   onTap: () async {
+                  //                     var training_plan_id = List.from(_userTrainingData.keys)[index].toString();
+                  //                     final delete_plan_id = await Navigator.of(context).push(
+                  //                       MaterialPageRoute(builder: (context) {
+                  //                         return EditTrainingPlanScreen(training_plan_id: training_plan_id, user_training_data: _userTrainingData[training_plan_id]);
+                  //                       }),
+                  //                     );
+                  //                     if (delete_plan_id != null) {
+                  //                       setState(() {
+                  //                         _userTrainingData.remove(delete_plan_id.toString());
+                  //                       });
+                  //                       // Providerにデータを保存する
+                  //                       ref.read(userTrainingDataProvider.notifier).state = _userTrainingData;
+                  //                     }
+                  //                   },
+                  //                   child: Container(
+                  //                     width: 180,
+                  //                     child: Column(
+                  //                       children: <Widget>[
+                  //                         ListTile(
+                  //                           title: Text(
+                  //                             _userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_name'].toString(),
+                  //                             style: TextStyle(fontWeight: FontWeight.bold),
+                  //                           ),
+                  //                           subtitle: _userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_description'].toString() == ''
+                  //                               ? Text(planDescriptionNotFound + '\n' + _userTrainingData[List.from(_userTrainingData.keys)[index]]['count'].toString() + ' trainings')
+                  //                               : Text(_userTrainingData[List.from(_userTrainingData.keys)[index]]['training_plan_description'].toString() + '\n' + _userTrainingData[List.from(_userTrainingData.keys)[index]]['count'].toString() + ' trainings'),
+                  //                           trailing: Icon(Icons.arrow_forward_ios_rounded),
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                   ),
+                  //                 ));
+                  //     },
+                  //   ),
+                  // ),
+                  // --------------------
+                  // プランここまで
+                  // --------------------
 
-              // --------------------
-              // カレンダーここから
-              // --------------------
-              Container(
-                  margin: EdgeInsets.only(left: 15.0, top: 20.0),
-                  alignment: Alignment.centerLeft, //任意のプロパティ
-                  width: double.infinity,
-                  child: Text(
-                    'スケジュール',
-                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-                  )),
-              Padding(
-                padding: const EdgeInsets.all(0.0),
-                child: TableCalendar(
-                    locale: 'ja_JP',
-                    firstDay: DateTime.utc(2023, 1, 1),
-                    lastDay: DateTime.utc(2024, 12, 31),
-                    focusedDay: _focusedDay,
-                    eventLoader: (date) {
-                      // イベントドット処理
-                      return _calendarMap[date] ?? [];
-                    },
-                    calendarBuilders: CalendarBuilders(markerBuilder: (context, date, events) {
-                      if (events.isNotEmpty) {
-                        return Positioned(
-                          right: 5,
-                          bottom: 5,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.red[300],
-                            ),
-                            width: 16.0,
-                            height: 16.0,
-                            child: Center(
-                              child: Text(
-                                '${events.length}',
-                                style: TextStyle().copyWith(
-                                  color: Colors.white,
-                                  fontSize: 12.0,
+                  // --------------------
+                  // カレンダーここから
+                  // --------------------
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                      Text(
+                        'スケジュール',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18),
+                      ),
+                      IconButton(icon: Icon(Icons.add_circle), onPressed: () async {})
+                    ]),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(0.0),
+                    child: TableCalendar(
+                        locale: 'ja_JP',
+                        firstDay: DateTime.utc(2023, 1, 1),
+                        lastDay: DateTime.utc(2024, 12, 31),
+                        focusedDay: _focusedDay,
+                        eventLoader: (date) {
+                          // イベントドット処理
+                          return _calendarMap[date] ?? [];
+                        },
+                        calendarBuilders: CalendarBuilders(markerBuilder: (context, date, events) {
+                          if (events.isNotEmpty) {
+                            return Positioned(
+                              right: 5,
+                              bottom: 5,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.red[300],
+                                ),
+                                width: 16.0,
+                                height: 16.0,
+                                child: Center(
+                                  child: Text(
+                                    '${events.length}',
+                                    style: TextStyle().copyWith(
+                                      color: Colors.white,
+                                      fontSize: 12.0,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            );
+                          }
+                          ;
+                        }),
+                        calendarStyle: CalendarStyle(
+                          // defaultTextStyle:TextStyle(color: Colors.blue),
+                          // weekNumberTextStyle:TextStyle(color: Colors.red),
+                          selectedDecoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
                           ),
-                        );
-                      }
-                      ;
-                    }),
-                    calendarStyle: CalendarStyle(
-                      // defaultTextStyle:TextStyle(color: Colors.blue),
-                      // weekNumberTextStyle:TextStyle(color: Colors.red),
-                      selectedDecoration: BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      // todayDecoration: BoxDecoration(
-                      //   color: Colors.red[300],
-                      //   shape: BoxShape.circle,
-                      // ),
-                      weekendTextStyle: TextStyle(color: Colors.orange),
-                    ),
-                    headerStyle: HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                    ),
-                    calendarFormat: _calendarFormat, // デフォを月表示に設定
-                    onFormatChanged: (format) {
-                      // 「月」「週」変更
-                      if (_calendarFormat != format) {
-                        setState(() {
-                          _calendarFormat = format;
-                        });
-                      }
-                    },
-                    // 選択日のアニメーション
-                    selectedDayPredicate: (day) {
-                      return isSameDay(_selectedDay, day);
-                    },
-                    // 日付が選択されたときの処理
-                    onDaySelected: (selectedDay, focusedDay) {
-                      // 選択された日付が2回タップされた場合にモーダルを表示する
-                      if (_selectedDay == selectedDay) {
-                        print(_selectedEvents);
-                        showCalendarModal(context, uid, selectedDay, ['test1', 'test2']);
-                      }
-
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                        _selectedEvents = _calendarEvents[selectedDay] ?? [];
-                      });
-                    }),
-              ),
-              // タップした時表示するリスト
-              Expanded(
-                child: _selectedEvents.length == 0
-                    ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text('予定はありません。')]))
-                    : ListView.builder(
-                        itemCount: _selectedEvents.length,
-                        itemBuilder: (context, index) {
-                          final event = _selectedEvents[index];
-                          return Card(
-                            child: ListTile(
-                              title: Text(event),
-                              onTap: () {
-                                print(event);
-                              },
-                            ),
-                          );
+                          // todayDecoration: BoxDecoration(
+                          //   color: Colors.red[300],
+                          //   shape: BoxShape.circle,
+                          // ),
+                          weekendTextStyle: TextStyle(color: Colors.orange),
+                        ),
+                        headerStyle: HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                        ),
+                        calendarFormat: _calendarFormat, // デフォを月表示に設定
+                        onFormatChanged: (format) {
+                          // 「月」「週」変更
+                          if (_calendarFormat != format) {
+                            setState(() {
+                              _calendarFormat = format;
+                            });
+                          }
                         },
-                      ),
-              ),
-              // --------------------
-              // カレンダーここまで
-              // --------------------
-            ])),
-      // floatingActionButton: FloatingActionButton(
-      //   shape: RoundedRectangleBorder(
-      //     borderRadius: BorderRadius.circular(100), //角の丸み
-      //   ),
-      //   onPressed: () async {
-      //     // "push"で新規画面に遷移
-      //     // リスト追加画面から渡される値を受け取る
-      //     final newListText = await Navigator.of(context).push(
-      //       MaterialPageRoute(builder: (context) {
-      //         // 遷移先の画面としてリスト追加画面を指定
-      //         return CreateTrainingPlanScreen();
-      //       }),
-      //     );
-      //     if (newListText != null) {
-      //       // キャンセルした場合は newListText が null となるので注意
-      //       setState(() {
-      //         // リスト追加
-      //         trainingPlanTitle.add(newListText['training_title']);
-      //         trainingPlanDescription.add(
-      //             newListText['training_description'] != null
-      //                 ? newListText['training_description']
-      //                 : plan_not_registered);
-      //         trainingPlanCount.add(int.parse(newListText['training_count']));
-      //       });
-      //     }
-      //   },
-      //   child: Icon(Icons.add),
-      //   backgroundColor: Colors.blue,
-      // ),
+                        // 選択日のアニメーション
+                        selectedDayPredicate: (day) {
+                          return isSameDay(_selectedDay, day);
+                        },
+                        // 日付が選択されたときの処理
+                        onDaySelected: (selectedDay, focusedDay) {
+                          // 選択された日付が2回タップされた場合にモーダルを表示する
+                          if (_selectedDay == selectedDay) {
+                            print(_selectedEvents);
+                            showCalendarModal(context, uid, selectedDay, ['test1', 'test2']);
+                          }
+
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                            _selectedEvents = _calendarEvents[selectedDay] ?? [];
+                          });
+                        }),
+                  ),
+                  // タップした時表示するリスト
+                  // Expanded(
+                  //   child: _selectedEvents.length == 0
+                  //       ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text('予定はありません。')]))
+                  //       : ListView.builder(
+                  //           itemCount: _selectedEvents.length,
+                  //           itemBuilder: (context, index) {
+                  //             final event = _selectedEvents[index];
+                  //             return Card(
+                  //               child: ListTile(
+                  //                 title: Text(event),
+                  //                 onTap: () {
+                  //                   print(event);
+                  //                 },
+                  //               ),
+                  //             );
+                  //           },
+                  //         ),
+                  // ),
+                  // --------------------
+                  // カレンダーここまで
+                  // --------------------
+
+                  // --------------------
+                  // 予実の折れ線グラフここから
+                  // --------------------
+                  Container(
+                      margin: EdgeInsets.only(left: 15.0, top: 20.0),
+                      alignment: Alignment.centerLeft, //任意のプロパティ
+                      width: double.infinity,
+                      child: Text(
+                        '予定と実績',
+                        style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                      )),
+                  SizedBox(child: LineChartSample1()),
+                  // --------------------
+                  // 予実の折れ線グラフここまで
+                  // --------------------
+
+                ])),
     );
   }
 }

@@ -4,11 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-import '../login.dart';
-import '../common/dialogs.dart';
-import '../mypage/pie_chart.dart';
-import '../mypage/line_chart_1.dart';
-import '../mypage/line_chart_2.dart';
+import 'package:liftaholic_frontend/src/login.dart';
+import 'package:liftaholic_frontend/src//common/dialogs.dart';
+import 'package:liftaholic_frontend/src//mypage/pie_chart.dart';
+import 'package:liftaholic_frontend/src//mypage/line_chart_1.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({Key? key}) : super(key: key);
@@ -134,15 +133,6 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
             )),
         Container(child: BreakdownPieChartScreen()),
-
-        // 日付ごとの折れ線グラフ
-        Container(
-            margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-            child: Text(
-              '予定と実績',
-              style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-            )),
-        Container(child: LineChartSample1()),
 
         // 日付ごとの折れ線グラフ
         Container(
