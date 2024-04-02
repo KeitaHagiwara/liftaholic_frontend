@@ -270,14 +270,14 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
         return StopWatchScreen(user_training_id: _user_training_id, exec_training_menu: _exec_training_menu, index: index);
       },
     ).then((value) {
-      print(value);
       // valueは完了有無のbooleanを返却する
       if (value != null) {
         // インターバルタイマーのモーダルを表示する
         var all_complete = true;
         var training_name = _exec_training_menu[_user_training_id]['training_name'];
         var interval = _exec_training_menu[_user_training_id]['interval'];
-        print(_exec_training_menu[_user_training_id]['sets_achieve']);
+        // print(_exec_training_menu[_user_training_id]['sets_achieve']);
+
         for (var i = 0; i < _exec_training_menu[_user_training_id]['sets_achieve'].length; i++) {
           if (!_exec_training_menu[_user_training_id]['sets_achieve'][i]['is_completed']) {
             all_complete = false;
@@ -288,31 +288,19 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
         if (!all_complete) {
           showDialog(
             context: context,
+            barrierDismissible: false, // ボタンが押されるまでダイアログは閉じない
             builder: (BuildContext context_modal) {
-              return AlertDialog(
-                title: Text('インターバル', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                content: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(interval, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 36)),
-                ]),
-                actions: [
-                  TextButton(
-                    child: Text("終了"),
-                    onPressed: () {
-                      // 確認モーダルを削除する
-                      Navigator.of(context_modal).pop();
-                    },
-                  ),
-                ],
-              );
+              return IntervalModalScreen(intervalStr: interval);
             },
           );
+          // 全てのセットが完了してる場合、完了のポップアップを表示する
         } else {
           showDialog(
               context: context,
               builder: (BuildContext context_modal) {
                 return AlertDialog(
-                  title: Text('トレーニングメニュー完了', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  content: Text(training_name + 'の全セットが完了しました。\nお疲れ様でした🎉', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  title: Text('トレーニングメニュー完了🎉', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  content: Text(training_name + 'の全セットが完了しました。\nお疲れ様でした！', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
                   actions: [
                     TextButton(
                       child: Text("OK"),
@@ -330,5 +318,78 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
       // 実績を更新する -> これがないと画面が更新されない
       setState(() {});
     });
+  }
+}
+
+class IntervalModalScreen extends ConsumerStatefulWidget {
+  const IntervalModalScreen({super.key, required this.intervalStr});
+
+  final String intervalStr;
+
+  @override
+  _IntervalModalScreenState createState() => _IntervalModalScreenState();
+}
+
+class _IntervalModalScreenState extends ConsumerState<IntervalModalScreen> {
+  late Timer _timer;
+  late int _currentSeconds;
+  late String _intervalStr;
+
+  String timerString(int leftSeconds) {
+    final minutes = (leftSeconds / 60).floor().toString().padLeft(2, '0');
+    final seconds = (leftSeconds % 60).floor().toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  Timer countTimer() {
+    return Timer.periodic(
+      const Duration(seconds: 1),
+      (Timer _timer) {
+        if (_currentSeconds < 1) {
+          _timer.cancel();
+        } else {
+          setState(() {
+            _currentSeconds = _currentSeconds - 1;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // インターバルの文字列を取得する
+    _intervalStr = widget.intervalStr;
+    // 秒数換算する
+    _currentSeconds = getIntervalDuration(_intervalStr)['interval_min'] * 60 + getIntervalDuration(_intervalStr)['interval_sec'];
+    // タイマーを起動する
+    _timer = countTimer();
+  }
+
+  // データを元に表示するWidget
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('インターバル', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        if (_currentSeconds > 0) ...{
+          Text(timerString(_currentSeconds), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 36)),
+        } else ...{
+          Text('インターバルは終了です。\n次のセットに進んでください。', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
+        }
+      ]),
+      actions: [
+        TextButton(
+          child: _currentSeconds > 0 ? Text("終了") : Text("OK"),
+          onPressed: () {
+            _timer.cancel();
+            // 確認モーダルを削除する
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
   }
 }

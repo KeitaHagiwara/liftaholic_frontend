@@ -69,6 +69,30 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
 
     // トレーニングメニュー用のデータを初期化する
     initialize_set_menu();
+    print(_exec_training_menu);
+  }
+
+  PopupMenuItem _buildPopupMenuItem(BuildContext context, String title, IconData iconData, Color color, FontWeight fontWeight, int callbackFunctionId, Map payload) {
+    return PopupMenuItem(
+        child: InkWell(
+      onTap: () async {
+        // ------ トレーニングプラン削除 ------
+        if (callbackFunctionId == 1) {
+          var training_no = payload['user_training_no'].toString();
+          setState(() {
+            _exec_training_menu.remove(training_no);
+          });
+          Navigator.of(context).pop();
+        }
+      },
+      child: Row(
+        children: [
+          Icon(iconData, color: color),
+          Text(' '),
+          Text(title, style: TextStyle(fontWeight: fontWeight, color: color)),
+        ],
+      ),
+    ));
   }
 
   @override
@@ -136,6 +160,13 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                           ],
                                         )
                                       ])),
+                                  trailing: PopupMenuButton(
+                                    icon: Icon(Icons.more_horiz, color: Colors.white70),
+                                    itemBuilder: (ctx) => [
+                                      _buildPopupMenuItem(context, 'メニュー削除', Icons.delete, Colors.red, FontWeight.bold, 1, {'user_training_no': List.from(_exec_training_menu.keys)[index]}),
+                                    ],
+                                  ),
+                                  // trailing: IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz)),
                                   onTap: () {
                                     var tgt_training_id = List.from(_exec_training_menu.keys)[index];
                                     Navigator.of(context).push(MaterialPageRoute(builder: (context) {

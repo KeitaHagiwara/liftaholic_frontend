@@ -9,11 +9,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import 'package:liftaholic_frontend/src//common/dialogs.dart';
-import 'package:liftaholic_frontend/src//common/error_messages.dart';
-import 'package:liftaholic_frontend/src//planning/show_calendar_modal.dart';
-import 'package:liftaholic_frontend/src//firebase/user_info.dart';
-import 'package:liftaholic_frontend/src//mypage/line_chart_2.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
+import 'package:liftaholic_frontend/src/common/error_messages.dart';
+import 'package:liftaholic_frontend/src/planning/show_calendar_modal.dart';
+import 'package:liftaholic_frontend/src/firebase/user_info.dart';
+import 'package:liftaholic_frontend/src/mypage/line_chart_2.dart';
 
 class PlanningScreen extends ConsumerStatefulWidget {
   const PlanningScreen({super.key});
