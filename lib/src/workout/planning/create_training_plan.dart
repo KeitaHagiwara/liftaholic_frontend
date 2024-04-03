@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 
 import '../../common/dialogs.dart';
-import '../../common/error_messages.dart';
+import '../../common/messages.dart';
 import '../../bottom_menu/planning.dart';
 
 class CreateTrainingPlanScreen extends ConsumerStatefulWidget {

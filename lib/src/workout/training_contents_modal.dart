@@ -8,7 +8,7 @@ import 'package:flutter_spinbox/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../common/dialogs.dart';
-import '../common/error_messages.dart';
+import '../common/messages.dart';
 
 // Paddingの定数を設定する
 const padding_vertical = 10;

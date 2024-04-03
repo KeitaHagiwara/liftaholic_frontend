@@ -11,7 +11,8 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:liftaholic_frontend/src/common/provider.dart';
-// import 'package:liftaholic_frontend/src/common/functions.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
+import 'package:liftaholic_frontend/src/common/messages.dart';
 import 'package:liftaholic_frontend/src/common/default_value.dart';
 import 'package:liftaholic_frontend/src/workout/execute/exec_workout.dart';
 import 'package:liftaholic_frontend/src/workout/select_training_menu_modal.dart';
@@ -59,6 +60,54 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
       _execTrainingMenu[List.from(_execTrainingMenu.keys)[i]]['sets_achieve'] = set_list;
       // 進捗度の数値を入れる
       _execTrainingMenu[List.from(_execTrainingMenu.keys)[i]]['progress'] = 0;
+    }
+  }
+
+  // ----------------------------
+  // ワークアウト終了時に実績を保存する
+  // ----------------------------
+  Future<Map> _completeWorkout() async {
+    setState(() {
+      // スピナー表示
+      _loading = true;
+    });
+
+    // ワークアウトに登録する用のリクエストデータを作成する
+    var achieveDataList = [];
+    for (var key in _execTrainingMenu.keys) {
+      var trainingName = _execTrainingMenu[key]['training_name'];
+      var setsAchieve = _execTrainingMenu[key]['sets_achieve'];
+      for (var i = 0; i < setsAchieve.length; i++) {
+        // セットが完了していたら実績リストに追加
+        if (setsAchieve[i]['is_completed']) {
+          setsAchieve[i]['training_name'] = trainingName;
+          achieveDataList.add(setsAchieve[i]);
+        }
+      }
+    }
+
+    await dotenv.load(fileName: '.env');
+    //リクエスト先のurl
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/workout/complete_workout");
+
+    Map<String, String> headers = {'content-type': 'application/json'};
+    String body = json.encode({'user_id': FirebaseAuth.instance.currentUser?.uid, 'training_plan_id': ref.read(execPlanIdProvider), 'training_set_achieved': achieveDataList});
+
+    // POSTリクエストを投げる
+    try {
+      http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
+
+      var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      return jsonResponse;
+    } catch (e) {
+      return {};
+      // //リクエストに失敗した場合はエラーメッセージを表示
+      // AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
+    } finally {
+      setState(() {
+        // スピナー非表示
+        _loading = false;
+      });
     }
   }
 
@@ -136,13 +185,13 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
           // トレーニングが進行中だった場合はアラートダイアログを表示する
           if (progress > 0) {
             showFutureDialog(trainingName).then((value) {
-              if (value){
+              if (value) {
                 setState(() {
                   _execTrainingMenu.remove(userTrainingNo);
                 });
               }
             });
-          // トレーニングが進行中ではない場合はそのまま削除する
+            // トレーニングが進行中ではない場合はそのまま削除する
           } else {
             setState(() {
               _execTrainingMenu.remove(userTrainingNo);
@@ -229,77 +278,79 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                   ),
                   const SizedBox(height: 20),
                   Flexible(
-                      child: ListView.separated(
-                          separatorBuilder: (BuildContext context, int index) => Divider(color: Colors.grey),
-                          itemCount: _execTrainingMenu.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Column(children: <Widget>[
-                              ListTile(
-                                  dense: true,
-                                  title: Text(_execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['training_name']),
-                                  leading: SizedBox(
-                                      height: 60,
-                                      width: 60,
-                                      child: SfRadialGauge(axes: <RadialAxis>[
-                                        RadialAxis(
-                                          minimum: 0,
-                                          maximum: 100,
-                                          showLabels: false,
-                                          showTicks: false,
-                                          startAngle: 270,
-                                          endAngle: 270,
-                                          axisLineStyle: AxisLineStyle(
-                                            thickness: 1,
-                                            color: Colors.white, //const Color.fromARGB(255, 0, 169, 181),
-                                            thicknessUnit: GaugeSizeUnit.factor,
-                                          ),
-                                          pointers: <GaugePointer>[
-                                            RangePointer(
-                                              value: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toDouble(),
-                                              width: 0.2,
-                                              color: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100 ? Colors.green : Colors.green,
-                                              pointerOffset: 0.1,
-                                              cornerStyle: CornerStyle.bothCurve,
-                                              sizeUnit: GaugeSizeUnit.factor,
+                      child: _execTrainingMenu.isEmpty
+                          ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('トレーニングメニューが未登録です。')]))
+                          : ListView.separated(
+                              separatorBuilder: (BuildContext context, int index) => Divider(color: Colors.grey),
+                              itemCount: _execTrainingMenu.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Column(children: <Widget>[
+                                  ListTile(
+                                      dense: true,
+                                      title: Text(_execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['training_name']),
+                                      leading: SizedBox(
+                                          height: 60,
+                                          width: 60,
+                                          child: SfRadialGauge(axes: <RadialAxis>[
+                                            RadialAxis(
+                                              minimum: 0,
+                                              maximum: 100,
+                                              showLabels: false,
+                                              showTicks: false,
+                                              startAngle: 270,
+                                              endAngle: 270,
+                                              axisLineStyle: AxisLineStyle(
+                                                thickness: 1,
+                                                color: Colors.white, //const Color.fromARGB(255, 0, 169, 181),
+                                                thicknessUnit: GaugeSizeUnit.factor,
+                                              ),
+                                              pointers: <GaugePointer>[
+                                                RangePointer(
+                                                  value: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toDouble(),
+                                                  width: 0.2,
+                                                  color: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100 ? Colors.green : Colors.green,
+                                                  pointerOffset: 0.1,
+                                                  cornerStyle: CornerStyle.bothCurve,
+                                                  sizeUnit: GaugeSizeUnit.factor,
+                                                )
+                                              ],
+                                              annotations: <GaugeAnnotation>[
+                                                GaugeAnnotation(
+                                                  widget: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100
+                                                      ? Text(
+                                                          'clear', // Display the percentage value with 2 decimal places
+                                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
+                                                        )
+                                                      : Text(
+                                                          _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toString() + '%', // Display the percentage value with 2 decimal places
+                                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                                                        ),
+                                                  angle: 90,
+                                                  positionFactor: 0.5,
+                                                ),
+                                              ],
                                             )
-                                          ],
-                                          annotations: <GaugeAnnotation>[
-                                            GaugeAnnotation(
-                                              widget: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100
-                                                  ? Text(
-                                                      'clear', // Display the percentage value with 2 decimal places
-                                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
-                                                    )
-                                                  : Text(
-                                                      _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toString() + '%', // Display the percentage value with 2 decimal places
-                                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
-                                                    ),
-                                              angle: 90,
-                                              positionFactor: 0.5,
-                                            ),
-                                          ],
-                                        )
-                                      ])),
-                                  trailing: PopupMenuButton(
-                                    icon: Icon(Icons.more_horiz, color: Colors.white70),
-                                    itemBuilder: (ctx) => [
-                                      _buildPopupMenuItem(context, 'メニュー削除', Icons.delete, Colors.red, FontWeight.bold, 1, {'user_training_no': List.from(_execTrainingMenu.keys)[index]}),
-                                    ],
-                                  ),
-                                  // trailing: IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz)),
-                                  onTap: () {
-                                    var tgt_training_id = List.from(_execTrainingMenu.keys)[index];
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-                                      // 遷移先の画面としてリスト追加画面を指定
-                                      return ExecWorkoutScreen(user_training_id: tgt_training_id);
-                                    })).then((value) {
-                                      setState(() {
-                                        _execTrainingMenu = ref.read(execTrainingMenuProvider);
-                                      });
-                                    });
-                                  })
-                            ]);
-                          })),
+                                          ])),
+                                      trailing: PopupMenuButton(
+                                        icon: Icon(Icons.more_horiz, color: Colors.white70),
+                                        itemBuilder: (ctx) => [
+                                          _buildPopupMenuItem(context, 'メニュー削除', Icons.delete, Colors.red, FontWeight.bold, 1, {'user_training_no': List.from(_execTrainingMenu.keys)[index]}),
+                                        ],
+                                      ),
+                                      // trailing: IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz)),
+                                      onTap: () {
+                                        var tgt_training_id = List.from(_execTrainingMenu.keys)[index];
+                                        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                                          // 遷移先の画面としてリスト追加画面を指定
+                                          return ExecWorkoutScreen(user_training_id: tgt_training_id);
+                                        })).then((value) {
+                                          setState(() {
+                                            _execTrainingMenu = ref.read(execTrainingMenuProvider);
+                                          });
+                                        });
+                                      })
+                                ]);
+                              })),
 
                   // メニュー選択ボタンを配置する
                   Container(
@@ -331,20 +382,20 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // ワークアウト終了のボタンを配置する
+                  // ワークアウト完了のボタンを配置する
                   Container(
                       padding: EdgeInsets.only(left: 64, right: 64),
                       width: double.infinity, // 横幅いっぱいに広げる
                       child: ElevatedButton(
-                          child: Text('ワークアウト終了', style: TextStyle(color: Colors.white)),
+                          child: Text('ワークアウト完了', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (BuildContext context_modal) {
                                 return AlertDialog(
-                                  title: Text('ワークアウト終了', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
-                                  content: Text('実施中のワークアウトを終了します。よろしいですか？'),
+                                  title: Text('確認', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
+                                  content: Text('実施中のワークアウトを終了します。\nよろしいですか？'),
                                   actions: [
                                     TextButton(
                                       child: Text("キャンセル"),
@@ -355,7 +406,16 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                     TextButton(
                                       child: Text("終了"),
                                       onPressed: () {
-                                        ref.read(isDoingWorkoutProvider.notifier).state = false;
+                                        // 実績に登録する
+                                        _completeWorkout().then((value) {
+                                          if (value['statusCode'] == 200) {
+                                            ref.read(isDoingWorkoutProvider.notifier).state = false;
+                                            AlertDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage']);
+                                          } else {
+                                            //リクエストに失敗した場合はエラーメッセージを表示
+                                            AlertDialogTemplate(context, ERR_MSG_TITLE, value['statusMessage']);
+                                          }
+                                        });
                                         Navigator.of(context_modal).pop();
                                       },
                                     ),

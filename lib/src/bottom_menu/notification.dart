@@ -9,7 +9,7 @@ import 'package:lottie/lottie.dart';
 
 import '../firebase/user_info.dart';
 import '../common/dialogs.dart';
-import '../common/error_messages.dart';
+import '../common/messages.dart';
 import '../common/provider.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {

@@ -111,7 +111,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app.dart';
 import 'common/dialogs.dart';
-import 'common/error_messages.dart';
+import 'common/messages.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);

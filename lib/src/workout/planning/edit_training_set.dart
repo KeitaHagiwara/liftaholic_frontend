@@ -13,7 +13,7 @@ import 'package:flutter_spinbox/material.dart';
 import 'package:liftaholic_frontend/src/common/default_value.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
-import 'package:liftaholic_frontend/src/common/error_messages.dart';
+import 'package:liftaholic_frontend/src/common/messages.dart';
 import 'package:liftaholic_frontend/src/common/functions.dart';
 import 'package:liftaholic_frontend/src/workout/training_contents_modal.dart';
 

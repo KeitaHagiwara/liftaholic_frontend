@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 
 import '../../common/dialogs.dart';
-import '../../common/error_messages.dart';
+import '../../common/messages.dart';
 import '../../common/functions.dart';
 
 class StopWatchScreen extends ConsumerStatefulWidget {

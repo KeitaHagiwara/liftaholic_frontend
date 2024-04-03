@@ -10,7 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter_slidable/flutter_slidable.dart';
 
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
-import 'package:liftaholic_frontend/src/common/error_messages.dart';
+import 'package:liftaholic_frontend/src/common/messages.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 import 'package:liftaholic_frontend/src/common/default_value.dart';
 import 'package:liftaholic_frontend/src/workout/execute/exec_workout_menu.dart';
@@ -126,53 +126,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   }
 
   // ----------------------------
-  // トレーニングプランにメニューを追加する
+  // 編集したトレーニングメニューを保存する
   // ----------------------------
-  // Future<void> _addTrainingMenu(training_plan_id, training_no) async {
-  //   setState(() {
-  //     // スピナー表示
-  //     _loading = true;
-  //   });
-
-  //   await dotenv.load(fileName: '.env');
-  //   //リクエスト先のurl
-  //   Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/add_training_menu");
-
-  //   Map<String, String> headers = {'content-type': 'application/json'};
-  //   String body = json.encode({'user_id': FirebaseAuth.instance.currentUser?.uid, 'training_plan_id': training_plan_id, 'training_no': training_no});
-
-  //   // POSTリクエストを投げる
-  //   try {
-  //     http.Response response = await http.post(url, headers: headers, body: body).timeout(Duration(seconds: 10));
-
-  //     var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-  //     print(jsonResponse);
-  //     if (jsonResponse['statusCode'] == 200) {
-  //       setState(() {
-  //         // Providerの値を更新する
-  //         ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['count'] += 1;
-  //         ref.read(userTrainingDataProvider.notifier).state[training_plan_id]['training_menu'][jsonResponse['add_user_training_id'][0].toString()] = jsonResponse['add_data'];
-  //         //リクエストに失敗した場合はエラーメッセージを表示
-  //         AlertDialogTemplate(context, '追加しました', jsonResponse['statusMessage']);
-  //       });
-  //     } else if (jsonResponse['statusCode'] == 409) {
-  //       //リクエストに失敗した場合はエラーメッセージを表示
-  //       AlertDialogTemplate(context, '登録済み', jsonResponse['statusMessage']);
-  //     } else {
-  //       //リクエストに失敗した場合はエラーメッセージを表示
-  //       AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
-  //     }
-  //   } catch (e) {
-  //     //リクエストに失敗した場合はエラーメッセージを表示
-  //     AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
-  //   } finally {
-  //     setState(() {
-  //       // スピナー非表示
-  //       _loading = false;
-  //     });
-  //   }
-  // }
-
   Future<void> _saveTrainingMenu() async {
     setState(() {
       // スピナー表示

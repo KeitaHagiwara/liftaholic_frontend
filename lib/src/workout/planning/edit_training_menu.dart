@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import '../../common/dialogs.dart';
-import '../../common/error_messages.dart';
+import '../../common/messages.dart';
 import '../../common/provider.dart';
 import '../../common/functions.dart';
 import '../training_contents_modal.dart';
