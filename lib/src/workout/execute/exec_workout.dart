@@ -77,7 +77,7 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
             content: Text((index + 1).toString() + 'セット目は完了していますが、削除しますか？'),
             actions: [
               TextButton(
-                child: Text("Cancel"),
+                child: Text("キャンセル"),
                 onPressed: () {
                   Navigator.of(context_modal).pop();
                 },

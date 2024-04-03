@@ -597,7 +597,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                               content: Text('選択したトレーニングプランを開始します。よろしいですか？'),
                                               actions: [
                                                 TextButton(
-                                                  child: Text("Cancel"),
+                                                  child: Text("キャンセル"),
                                                   onPressed: () {
                                                     Navigator.of(contextModal).pop();
                                                   },

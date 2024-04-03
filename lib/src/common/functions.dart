@@ -1,8 +1,8 @@
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter/material.dart';
 
-import '../common/provider.dart';
-import '../workout/training_contents_modal.dart';
+// import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/workout/training_contents_modal.dart';
 
 // ---------------------------
 // プログレスの数値を計算する

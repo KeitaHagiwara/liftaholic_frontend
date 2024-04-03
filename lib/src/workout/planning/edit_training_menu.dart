@@ -177,7 +177,7 @@ class _EditTrainingMenuScreenState extends ConsumerState<EditTrainingMenuScreen>
           content: Text('「' + training_name + '」をトレーニングメニューから削除します。よろしいですか？'),
           actions: [
             TextButton(
-              child: Text("Cancel"),
+              child: Text("キャンセル"),
               onPressed: () {
                 Navigator.of(context_modal).pop();
               },

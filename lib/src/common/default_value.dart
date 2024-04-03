@@ -7,7 +7,7 @@ const String s3Folder = 'parts_images/';
 const String planDescriptionNotFound = 'プランの説明はありません';
 
 // セット数のデフォルト値
-const int setsDefault = 1;
+const int setsDefault = 3;
 // REPSのデフォルト値
 const int repsDefault = 1;
 // kgのデフォルト値
