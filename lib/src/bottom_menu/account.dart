@@ -6,7 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 
 import 'package:liftaholic_frontend/src/login.dart';
 import 'package:liftaholic_frontend/src//common/dialogs.dart';
-import 'package:liftaholic_frontend/src//mypage/pie_chart.dart';
+import 'package:liftaholic_frontend/src/mypage/pie_chart_parts_pct.dart';
 import 'package:liftaholic_frontend/src//mypage/line_chart_1.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
@@ -129,7 +129,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         Container(
             margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
             child: Text(
-              'トレーニング内訳',
+              '月間のトレーニング内訳',
               style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
             )),
         Container(child: BreakdownPieChartScreen()),

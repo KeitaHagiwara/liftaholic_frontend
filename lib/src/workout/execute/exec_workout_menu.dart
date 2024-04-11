@@ -410,7 +410,7 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                         _completeWorkout().then((value) {
                                           if (value['statusCode'] == 200) {
                                             ref.read(isDoingWorkoutProvider.notifier).state = false;
-                                            AlertDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage']);
+                                            LottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
                                           } else {
                                             //リクエストに失敗した場合はエラーメッセージを表示
                                             AlertDialogTemplate(context, ERR_MSG_TITLE, value['statusMessage']);

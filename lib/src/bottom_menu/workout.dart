@@ -505,7 +505,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                                             var training = ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]];
                                                             showTrainingContentModal(context, training);
                                                           },
-                                                          child: CircleAvatar(radius: 25, foregroundImage: NetworkImage(networkImageDomain + s3Folder + ref.read(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['part_image_file'])),
+                                                          // child: CircleAvatar(radius: 25, foregroundImage: NetworkImage(networkImageDomain + s3Folder + ref.read(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['part_image_file'])),
+                                                          child: CircleAvatar(radius: 25, foregroundImage: AssetImage("assets/images/parts/" + ref.read(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['part_image_file'])),
                                                         ),
                                                         title: Text(
                                                           ref.watch(execTrainingMenuProvider)[List.from(ref.read(execTrainingMenuProvider).keys)[index]]['training_name'],

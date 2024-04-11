@@ -8,12 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
 import 'package:liftaholic_frontend/src/common/messages.dart';
+import 'package:liftaholic_frontend/src/planning/line_chart_achievement.dart';
 import 'package:liftaholic_frontend/src/planning/show_calendar_modal.dart';
 import 'package:liftaholic_frontend/src/firebase/user_info.dart';
-import 'package:liftaholic_frontend/src/mypage/line_chart_2.dart';
 
 class PlanningScreen extends ConsumerStatefulWidget {
   const PlanningScreen({super.key});
@@ -478,11 +479,10 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                         '予定と実績',
                         style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
                       )),
-                  SizedBox(child: LineChartSample1()),
+                  SizedBox(child: LineChartAchievementScreen()),
                   // --------------------
                   // 予実の折れ線グラフここまで
                   // --------------------
-
                 ])),
     );
   }

@@ -45,10 +45,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
     - assets/images/account/
     - assets/images/parts/
-    - assets/google_fonts/
+    - assets/lottie_json/
     - assets/icons/
     - .env
   fonts:

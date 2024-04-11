@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:flutter_slidable/flutter_slidable.dart';
 
 import 'package:liftaholic_frontend/src/common/default_value.dart';
 import 'package:liftaholic_frontend/src/workout/training_contents_modal.dart';
@@ -144,7 +143,8 @@ class _StatefulBottomSheetState extends ConsumerState<StatefulBottomSheet> {
                       ),
                       child: ListTile(
                         // dense: true,
-                        leading: CircleAvatar(foregroundImage: NetworkImage(networkImageDomain + s3Folder + trainingMenuMaster[List.from(trainingMenuMaster.keys)[i]]['0']['part_image_file'])),
+                        // leading: CircleAvatar(foregroundImage: NetworkImage(networkImageDomain + s3Folder + trainingMenuMaster[List.from(trainingMenuMaster.keys)[i]]['0']['part_image_file'])),
+                        leading: CircleAvatar(foregroundImage: AssetImage('assets/images/parts/' +  trainingMenuMaster[List.from(trainingMenuMaster.keys)[i]]['0']['part_image_file'])),
                         title: Text(
                           List.from(trainingMenuMaster.keys)[i],
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:lottie/lottie.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'package:flutter_spinbox/material.dart';
@@ -295,21 +296,38 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
           );
           // 全てのセットが完了してる場合、完了のポップアップを表示する
         } else {
+          // トレーニングメニュー終了時のアクションボタンを設定する
+          Widget actionButton(context_modal) {
+            return TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                // 確認モーダルを削除する
+                Navigator.of(context_modal).pop();
+                Navigator.of(context).pop();
+              },
+            );
+          }
+
           showDialog(
               context: context,
               builder: (BuildContext context_modal) {
                 return AlertDialog(
                   title: Text('トレーニングメニュー完了🎉', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  content: Text(training_name + 'の全セットが完了しました。\nお疲れ様でした！', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
-                  actions: [
-                    TextButton(
-                      child: Text("OK"),
-                      onPressed: () {
-                        // 確認モーダルを削除する
-                        Navigator.of(context_modal).pop();
-                        Navigator.of(context).pop();
+                  // content: Text(training_name + 'の全セットが完了しました。\nお疲れ様でした！', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
+                  content: SizedBox(
+                    child: Lottie.asset(
+                      'assets/lottie_json/complete_sets.json',
+                      width: 150,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Padding(
+                          padding: EdgeInsets.all(0),
+                          child: CircularProgressIndicator(),
+                        );
                       },
                     ),
+                  ),
+                  actions: [
+                    actionButton(context_modal),
                   ],
                 );
               });
