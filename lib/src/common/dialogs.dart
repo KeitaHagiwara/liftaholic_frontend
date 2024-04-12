@@ -49,26 +49,27 @@ Future<void> ConfirmDialogTemplate(BuildContext context, Widget callbackButton, 
   );
 }
 
-Future<void> LottieDialogTemplate(BuildContext context, String titleMsg, String contentMsg, String lottiePath) async {
-  return showDialog(
-    context: context,
-    builder: (BuildContext context_modal) {
-      return AlertDialog(
-        title: Text(titleMsg),
-        content: SizedBox(
-          child: Lottie.asset(
-            lottiePath,
-            width: 220,
-            errorBuilder: (context, error, stackTrace) {
-              return const Padding(
-                padding: EdgeInsets.all(0),
-                child: CircularProgressIndicator(),
-              );
-            },
-          ),
+lottieDialogTemplate(context, String titleMsg, String lottiePath, Map lottieSize, List<Widget> actionButtonList) {
+  Widget alertWidget = AlertDialog(
+      title: Text(
+        textAlign: TextAlign.center,
+        titleMsg,
+        style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,),
+      ),
+      content: SizedBox(
+        child: Lottie.asset(
+          lottiePath,
+          width: lottieSize['width'].toDouble(),
+          height: lottieSize['height'].toDouble(),
+          errorBuilder: (context, error, stackTrace) {
+            return const Padding(
+              padding: EdgeInsets.all(0),
+              child: CircularProgressIndicator(),
+            );
+          },
         ),
-        // actions: [okButton(context_modal)],
-      );
-    },
-  );
+      ),
+      actions: actionButtonList
+    );
+  return alertWidget;
 }

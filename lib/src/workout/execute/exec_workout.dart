@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import 'package:liftaholic_frontend/src/common/default_value.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
 import 'package:liftaholic_frontend/src/common/functions.dart';
 import 'package:liftaholic_frontend/src/workout/training_contents_modal.dart';
 import 'package:liftaholic_frontend/src/workout/execute/stop_watch.dart';
@@ -290,19 +291,19 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
           showDialog(
             context: context,
             barrierDismissible: false, // ボタンが押されるまでダイアログは閉じない
-            builder: (BuildContext context_modal) {
+            builder: (BuildContext contextModal) {
               return IntervalModalScreen(intervalStr: interval);
             },
           );
           // 全てのセットが完了してる場合、完了のポップアップを表示する
         } else {
           // トレーニングメニュー終了時のアクションボタンを設定する
-          Widget actionButton(context_modal) {
+          Widget actionButton(contextModal) {
             return TextButton(
               child: Text("OK"),
               onPressed: () {
                 // 確認モーダルを削除する
-                Navigator.of(context_modal).pop();
+                Navigator.of(contextModal).pop();
                 Navigator.of(context).pop();
               },
             );
@@ -310,26 +311,9 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
 
           showDialog(
               context: context,
-              builder: (BuildContext context_modal) {
-                return AlertDialog(
-                  title: Text('トレーニングメニュー完了🎉', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  // content: Text(training_name + 'の全セットが完了しました。\nお疲れ様でした！', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
-                  content: SizedBox(
-                    child: Lottie.asset(
-                      'assets/lottie_json/complete_sets.json',
-                      width: 150,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Padding(
-                          padding: EdgeInsets.all(0),
-                          child: CircularProgressIndicator(),
-                        );
-                      },
-                    ),
-                  ),
-                  actions: [
-                    actionButton(context_modal),
-                  ],
-                );
+              barrierDismissible: false,
+              builder: (BuildContext contextModal) {
+                return lottieDialogTemplate(context, 'トレーニングメニュー完了🎉', 'assets/lottie_json/complete_sets.json', {'width': 100, 'height': 100}, [actionButton(contextModal)]);
               });
         }
       }

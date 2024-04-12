@@ -65,7 +65,6 @@ class _EditTrainingSetScreenState extends ConsumerState<EditTrainingSetScreen> {
 
     Map<String, String> headers = {'content-type': 'application/json'};
     Map update_data = {'user_id': FirebaseAuth.instance.currentUser?.uid, 'user_training_id': userTrainingId, 'sets': setsInput, 'reps': repsInput, 'kgs': kgsInput, 'interval': intervalStr};
-    print(update_data);
     String body = json.encode(update_data);
 
     // POSTリクエストを投げる

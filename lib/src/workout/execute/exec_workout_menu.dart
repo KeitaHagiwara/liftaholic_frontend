@@ -410,7 +410,24 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                         _completeWorkout().then((value) {
                                           if (value['statusCode'] == 200) {
                                             ref.read(isDoingWorkoutProvider.notifier).state = false;
-                                            LottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
+                                            // ワークアウト終了時のアクションボタンを設定する
+                                            Widget actionButton(contextModal) {
+                                              return TextButton(
+                                                child: Text("OK"),
+                                                onPressed: () {
+                                                  // 確認モーダルを削除する
+                                                  Navigator.of(contextModal).pop();
+                                                },
+                                              );
+                                            }
+                                            showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (BuildContext contextModal) {
+                                                  return lottieDialogTemplate(context, 'ワークアウト完了🎉', 'assets/lottie_json/finish_trainings.json', {'width': 250, 'height': 250}, [actionButton(contextModal)]);
+                                                });
+
+                                            // lottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
                                           } else {
                                             //リクエストに失敗した場合はエラーメッセージを表示
                                             AlertDialogTemplate(context, ERR_MSG_TITLE, value['statusMessage']);
