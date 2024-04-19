@@ -51,3 +51,6 @@ final execUserTrainingMenuProvider = StateProvider<Map>((ref) => {});
 
 // お知らせページの情報を格納するためのStateProvider
 final notificationProvider = StateProvider<Map>((ref) => {'あなた宛': [], 'ニュース': []});
+
+// お知らせの未読件数を格納するためのStateProvider
+final unreadMessageCounterProvider = StateProvider<int>((ref) => 0);

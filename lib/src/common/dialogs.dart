@@ -54,7 +54,10 @@ lottieDialogTemplate(context, String titleMsg, String lottiePath, Map lottieSize
       title: Text(
         textAlign: TextAlign.center,
         titleMsg,
-        style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,),
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: SizedBox(
         child: Lottie.asset(
@@ -63,13 +66,12 @@ lottieDialogTemplate(context, String titleMsg, String lottiePath, Map lottieSize
           height: lottieSize['height'].toDouble(),
           errorBuilder: (context, error, stackTrace) {
             return const Padding(
-              padding: EdgeInsets.all(0),
+              padding: EdgeInsets.zero,
               child: CircularProgressIndicator(),
             );
           },
         ),
       ),
-      actions: actionButtonList
-    );
+      actions: actionButtonList);
   return alertWidget;
 }

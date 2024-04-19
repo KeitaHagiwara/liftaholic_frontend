@@ -377,7 +377,26 @@ class _IntervalModalScreenState extends ConsumerState<IntervalModalScreen> {
       title: Text('インターバル', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         if (_currentSeconds > 0) ...{
-          Text(timerString(_currentSeconds), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 36)),
+          // 数値の横幅によるブレをなくす
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              for (var i = 0; i < 5; i++) ...{
+                if (i == 2)...{
+                  Container(
+                    alignment: Alignment.center,
+                    child: Text(":", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40)),
+                  ),
+                } else...{
+                  Container(
+                    alignment: Alignment.center,
+                    width: 25,
+                    child: Text(timerString(_currentSeconds).substring(i, i+1), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40)),
+                  ),
+                }
+              }
+            ]
+          ),
         } else ...{
           Text('インターバルは終了です。\n次のセットに進んでください。', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
         }

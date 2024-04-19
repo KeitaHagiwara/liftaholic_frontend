@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:lottie/lottie.dart';
 
-import '../firebase/user_info.dart';
-import '../common/dialogs.dart';
-import '../common/messages.dart';
-import '../common/provider.dart';
+import 'package:liftaholic_frontend/src/firebase/user_info.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
+import 'package:liftaholic_frontend/src/common/messages.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/notifications/notification_detail.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
@@ -19,14 +19,11 @@ class NotificationScreen extends ConsumerStatefulWidget {
   _NortificationScreenState createState() => _NortificationScreenState();
 }
 
-class _NortificationScreenState extends ConsumerState<NotificationScreen>
-    with SingleTickerProviderStateMixin {
+class _NortificationScreenState extends ConsumerState<NotificationScreen> with SingleTickerProviderStateMixin {
   // お知らせページのイニシャライザ設定
   bool _loading = false;
 
   String? uid = ''; // ユーザーID
-
-  Map results = {'あなた宛': [], 'ニュース': []};
 
   final List<Tab> tabs = <Tab>[
     Tab(
@@ -46,12 +43,7 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen>
 
     await dotenv.load(fileName: '.env');
     //リクエスト先のurl
-    Uri url = Uri.parse("http://" +
-        dotenv.get('API_HOST') +
-        ":" +
-        dotenv.get('API_PORT') +
-        "/api/notification/" +
-        uid);
+    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/notification/" + uid);
 
     try {
       //リクエストを投げる
@@ -64,11 +56,11 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen>
       if (!mounted) return;
       if (jsonResponse['statusCode'] == 200) {
         setState(() {
-          results = jsonResponse['result'];
+          ref.read(notificationProvider.notifier).state = jsonResponse['result'];
+          ref.read(unreadMessageCounterProvider.notifier).state = jsonResponse['unreadCount'];
         });
       } else {
-        AlertDialogTemplate(
-            context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
+        AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
       }
     } catch (e) {
       //リクエストに失敗した場合はエラーメッセージを表示
@@ -95,8 +87,7 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
+          ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
           : DefaultTabController(
               length: 2,
               child: Scaffold(
@@ -111,8 +102,7 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen>
                         indicatorColor: Colors.blue,
                         indicatorSize: TabBarIndicatorSize.tab,
                         indicatorWeight: 2,
-                        indicatorPadding:
-                            EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
+                        indicatorPadding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
                         labelColor: Colors.white70,
                       )
                     ],
@@ -130,105 +120,89 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen>
   }
 
   Widget _createTab(Tab tab) {
-    return ListView.builder(
-        itemCount: results[tab.text].length,
-        itemBuilder: (BuildContext context, int index) {
-          return Card(
-            child: Column(
-              children: <Widget>[
-                ListTile(
-                  title: Text(results[tab.text][index]['title']),
-                  subtitle: Text(results[tab.text][index]['created_at']),
-                  onTap: () {
-                    showModalBottomSheet(
-                      isScrollControlled: true,
-                      context: context,
-                      builder: (BuildContext context) {
-                        return SizedBox(
-                          height: 800,
-                          width: double.infinity,
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: EdgeInsets.all(5),
-                              child: Column(children: [
-                                Align(
-                                  alignment: Alignment.topRight,
-                                  child: IconButton(
-                                      icon: Icon(Icons.cancel),
-                                      onPressed: () {
-                                        Navigator.of(context).pop(); // Close the sheet.
-                                      }),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 40),
-                                  child: Column(children: [
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: Text(
-                                        results[tab.text][index]['title'],
-                                        textAlign: TextAlign.center,
-                                        style:
-                                            TextStyle(fontWeight: FontWeight.bold)
-                                                .copyWith(
-                                                    color: Colors.white70,
-                                                    fontSize: 18.0),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: Text(
-                                          results[tab.text][index]['created_at'],
-                                          textAlign: TextAlign.right),
-                                    ),
-                                    // default: 'https://lottie.host/13f1ca31-c177-4ebc-a64a-28f82a15c786/BmrjCFDPXQ.json',
-                                    // custom1 : 'https://lottie.host/c40cfa4e-ab6d-4c6e-aa13-2901a6bd5100/dG0o8nAXpc.json',
-                                    if (results[tab.text][index]
-                                            ['animation_width'] !=
-                                        null) ...[
-                                      Lottie.network(
-                                        results[tab.text][index]['animation_link'],
-                                        width: double.parse(results[tab.text][index]
-                                            ['animation_width']),
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Padding(
-                                            padding: EdgeInsets.all(0.0),
-                                            child: CircularProgressIndicator(),
-                                          );
-                                        },
-                                      ),
-                                    ] else ...[
-                                      Lottie.network(
-                                        results[tab.text][index]['animation_link'],
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Padding(
-                                            padding: EdgeInsets.all(0.0),
-                                            child: CircularProgressIndicator(),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: Container(
-                                        margin:
-                                            EdgeInsets.fromLTRB(0, 20.0, 0, 40.0),
-                                        child: Text(
-                                            results[tab.text][index]['detail']),
-                                      )
-                                    ),
-                                  ]),
-                                )
-                              ]),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          );
-        });
+    var notificationResults = ref.read(notificationProvider);
+    return RefreshIndicator(
+        color: Colors.blue, // インジケータの色
+        backgroundColor: Colors.white, // インジケータの背景色
+        displacement: 50.0, // リストの端から50ピクセル下に表示
+        edgeOffset: 10.0, // リストの端を10ピクセル下にオーバーライド
+        onRefresh: () async {
+          getAllNotifications(uid);
+        },
+        child: ListView.builder(
+            itemCount: notificationResults[tab.text].length,
+            itemBuilder: (BuildContext context, int index) {
+              return Container(
+                  margin: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(width: 0.5, color: Colors.grey),
+                    ),
+                  ),
+                  child: ListTile(
+                    title: Text(notificationResults[tab.text][index]['title']),
+                    subtitle: Text(
+                      notificationResults[tab.text][index]['created_at'],
+                      style: TextStyle(fontWeight: FontWeight.normal, fontSize: 11),
+                    ),
+                    trailing: Icon(Icons.navigate_next),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) {
+                          return NotificationDetailScreen(tabType: tab.text.toString(), notificationContent: notificationResults[tab.text][index]);
+                        }),
+                      );
+                      // showModalBottomSheet(
+                      //   isScrollControlled: true,
+                      //   context: context,
+                      //   builder: (BuildContext context) {
+                      //     return SizedBox(
+                      //       height: 800,
+                      //       width: double.infinity,
+                      //       child: SingleChildScrollView(
+                      //         child: Padding(
+                      //           padding: EdgeInsets.all(5),
+                      //           child: Column(children: [
+                      //             Align(
+                      //               alignment: Alignment.topRight,
+                      //               child: IconButton(
+                      //                   icon: Icon(Icons.cancel),
+                      //                   onPressed: () {
+                      //                     Navigator.of(context).pop(); // Close the sheet.
+                      //                   }),
+                      //             ),
+                      //             Padding(
+                      //               padding: EdgeInsets.symmetric(vertical: 0, horizontal: 40),
+                      //               child: Column(children: [
+                      //                 SizedBox(
+                      //                   width: double.infinity,
+                      //                   child: Text(
+                      //                     results[tab.text][index]['title'],
+                      //                     textAlign: TextAlign.center,
+                      //                     style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                      //                   ),
+                      //                 ),
+                      //                 SizedBox(
+                      //                   width: double.infinity,
+                      //                   child: Text(results[tab.text][index]['created_at'], textAlign: TextAlign.right),
+                      //                 ),
+                      //                 const SizedBox(height: 20),
+                      //                 SizedBox(
+                      //                     width: double.infinity,
+                      //                     child: Container(
+                      //                       margin: EdgeInsets.fromLTRB(0, 20.0, 0, 40.0),
+                      //                       child: Text(results[tab.text][index]['detail']),
+                      //                     )),
+                      //               ]),
+                      //             )
+                      //           ]),
+                      //         ),
+                      //       ),
+                      //     );
+                      //   },
+                      // );
+                    },
+                  ));
+            }));
   }
 }

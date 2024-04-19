@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:badges/badges.dart' as badges;
 
-import 'navigator/tab_item.dart';
-import '../common/provider.dart';
+import 'package:liftaholic_frontend/src/bottom_menu/navigator/tab_item.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
 
 final _navigatorKeys = <TabItem, GlobalKey<NavigatorState>>{
   TabItem.planning: GlobalKey<NavigatorState>(),
@@ -20,6 +21,9 @@ class BasePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 初期ページを設定する
     final currentTab = useState(TabItem.planning);
+
+    final unreadMessageCounter = ref.watch(unreadMessageCounterProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -53,7 +57,10 @@ class BasePage extends HookConsumerWidget {
               items: TabItem.values
                   .map(
                     (tabItem) => BottomNavigationBarItem(
-                      icon: Icon(tabItem.icon),
+                      // 通知件数のバッチを設定する
+                      icon: tabItem.title == 'お知らせ'
+                          ? informationBadge(unreadMessageCounter, tabItem)
+                          : Icon(tabItem.icon),
                       label: tabItem.title,
                     ),
                   )
@@ -76,4 +83,27 @@ class BasePage extends HookConsumerWidget {
             ),
     );
   }
+
+  // 通知バッチのwidget
+  Widget informationBadge(unreadMessageCounter, tabItem) {
+    return badges.Badge(
+      badgeContent: unreadMessageCounter! <= 999 ? Text(unreadMessageCounter.toString(), style: const TextStyle(color: Colors.white, fontSize: 10)) : Text('999+', style: const TextStyle(color: Colors.white, fontSize: 9)),
+      position: badgePosition(unreadMessageCounter),
+      showBadge: unreadMessageCounter! > 0 ? true : false,
+      // key: const Key('news-icon'),
+      child: Icon(tabItem.icon),
+    );
+  }
+
+  // badgeの位置を指定する
+  badges.BadgePosition badgePosition(unreadMessageCounter) {
+    badges.BadgePosition position = badges.BadgePosition.topEnd();
+    if (unreadMessageCounter! >= 10 && unreadMessageCounter! < 100) {
+      position = badges.BadgePosition.topEnd(top: -8, end: -8);
+    } else if (unreadMessageCounter! >= 100) {
+      position = badges.BadgePosition.topEnd(top: -8, end: -12);
+    }
+    return position;
+  }
+
 }

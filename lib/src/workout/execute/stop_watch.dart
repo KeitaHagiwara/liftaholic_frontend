@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 // import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,11 +10,12 @@ import 'package:flutter_spinbox/cupertino.dart';
 import 'package:flutter_spinbox/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:liftaholic_frontend/src/common/provider.dart';
 
-import '../../common/dialogs.dart';
-import '../../common/messages.dart';
-import '../../common/functions.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
+import 'package:liftaholic_frontend/src/common/messages.dart';
+import 'package:liftaholic_frontend/src/common/functions.dart';
+import 'package:liftaholic_frontend/src/workout/execute/timer.dart';
 
 class StopWatchScreen extends ConsumerStatefulWidget {
   const StopWatchScreen({Key? key, required this.user_training_id, required this.exec_training_menu, required this.index}) : super(key: key);
@@ -159,6 +161,7 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                     ),
             ),
             const SizedBox(height: 20),
+            // TimerScreen(),
             SizedBox(
               // Wrap the Container with Expanded widget
               child: Container(
@@ -171,7 +174,34 @@ class _StopWatchScreenState extends ConsumerState<StopWatchScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Icon(Icons.timer, size: 60, color: Colors.grey.shade800),
-                    if (_training_set_list[_menu_index]['is_completed']) ...{Text(_training_set_list[_menu_index]['time'], style: TextStyle(fontSize: 40, color: Colors.grey.shade900))} else ...{Text(timeString, style: TextStyle(fontSize: 40, color: Colors.grey.shade900))}
+                    // セットが完了している場合
+                    if (_training_set_list[_menu_index]['is_completed']) ...{
+                      Text(
+                        _training_set_list[_menu_index]['time'],
+                        style: TextStyle(fontSize: 40, color: Colors.grey.shade900)
+                      )
+                    } else ...{
+                      // 数値の横幅によるブレをなくす
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          for (var i = 0; i < 5; i++) ...{
+                            if (i == 2)...{
+                              Container(
+                                alignment: Alignment.center,
+                                child: Text(":", style: TextStyle(fontSize: 40, color: Colors.grey.shade900)),
+                              ),
+                            } else...{
+                              Container(
+                                alignment: Alignment.center,
+                                width: 25,
+                                child: Text(timeString.toString().substring(i, i+1), style: TextStyle(fontSize: 40, color: Colors.grey.shade900)),
+                              ),
+                            }
+                          }
+                        ]
+                      ),
+                    }
                   ],
                 ),
               ),

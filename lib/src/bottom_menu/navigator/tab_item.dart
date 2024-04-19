@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../planning.dart';
-import '../workout.dart';
-import '../notification.dart';
-import '../account.dart';
+import 'package:liftaholic_frontend/src/bottom_menu/planning.dart';
+import 'package:liftaholic_frontend/src/bottom_menu/workout.dart';
+import 'package:liftaholic_frontend/src/bottom_menu/notification.dart';
+import 'package:liftaholic_frontend/src/bottom_menu/account.dart';
 
 
 enum TabItem {

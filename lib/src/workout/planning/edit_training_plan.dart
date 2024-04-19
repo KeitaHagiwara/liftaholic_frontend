@@ -9,8 +9,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
 
-import '../../common/dialogs.dart';
-import '../../common/messages.dart';
+import 'package:liftaholic_frontend/src/common/dialogs.dart';
+import 'package:liftaholic_frontend/src/common/messages.dart';
 
 class EditTrainingPlanScreen extends ConsumerStatefulWidget {
   const EditTrainingPlanScreen({super.key, required this.training_plan_id});

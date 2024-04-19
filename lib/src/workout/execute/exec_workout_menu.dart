@@ -270,88 +270,99 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
         body: _loading
             ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
             : Container(
-                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 5),
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(
                     _trainingPlanName,
                     style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
                   ),
                   const SizedBox(height: 20),
+                  // Container(
+                  //     decoration: BoxDecoration(
+                  //   border: Border(
+                  //     bottom: BorderSide(width: 0.5, color: Colors.grey),
+                  //   ),
+                  // )),
                   Flexible(
                       child: _execTrainingMenu.isEmpty
                           ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('トレーニングメニューが未登録です。')]))
-                          : ListView.separated(
-                              separatorBuilder: (BuildContext context, int index) => Divider(color: Colors.grey),
-                              itemCount: _execTrainingMenu.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return Column(children: <Widget>[
-                                  ListTile(
-                                      dense: true,
-                                      title: Text(_execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['training_name']),
-                                      leading: SizedBox(
-                                          height: 60,
-                                          width: 60,
-                                          child: SfRadialGauge(axes: <RadialAxis>[
-                                            RadialAxis(
-                                              minimum: 0,
-                                              maximum: 100,
-                                              showLabels: false,
-                                              showTicks: false,
-                                              startAngle: 270,
-                                              endAngle: 270,
-                                              axisLineStyle: AxisLineStyle(
-                                                thickness: 1,
-                                                color: Colors.white, //const Color.fromARGB(255, 0, 169, 181),
-                                                thicknessUnit: GaugeSizeUnit.factor,
-                                              ),
-                                              pointers: <GaugePointer>[
-                                                RangePointer(
-                                                  value: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toDouble(),
-                                                  width: 0.2,
-                                                  color: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100 ? Colors.green : Colors.green,
-                                                  pointerOffset: 0.1,
-                                                  cornerStyle: CornerStyle.bothCurve,
-                                                  sizeUnit: GaugeSizeUnit.factor,
-                                                )
+                          : SizedBox(
+                              child: ListView.builder(
+                                  itemCount: _execTrainingMenu.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    return Container(
+                                        padding: const EdgeInsets.only(top: 5, bottom: 5),
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            top: index == 0 ? BorderSide(width: 0.5, color: Colors.grey) : BorderSide(color: Colors.transparent),
+                                            bottom: BorderSide(width: 0.5, color: Colors.grey),
+                                          ),
+                                        ),
+                                        child: ListTile(
+                                            dense: true,
+                                            title: Text(_execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['training_name']),
+                                            leading: SizedBox(
+                                                height: 60,
+                                                width: 60,
+                                                child: SfRadialGauge(axes: <RadialAxis>[
+                                                  RadialAxis(
+                                                    minimum: 0,
+                                                    maximum: 100,
+                                                    showLabels: false,
+                                                    showTicks: false,
+                                                    startAngle: 270,
+                                                    endAngle: 270,
+                                                    axisLineStyle: AxisLineStyle(
+                                                      thickness: 1,
+                                                      color: Colors.white, //const Color.fromARGB(255, 0, 169, 181),
+                                                      thicknessUnit: GaugeSizeUnit.factor,
+                                                    ),
+                                                    pointers: <GaugePointer>[
+                                                      RangePointer(
+                                                        value: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toDouble(),
+                                                        width: 0.2,
+                                                        color: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100 ? Colors.green : Colors.green,
+                                                        pointerOffset: 0.1,
+                                                        cornerStyle: CornerStyle.bothCurve,
+                                                        sizeUnit: GaugeSizeUnit.factor,
+                                                      )
+                                                    ],
+                                                    annotations: <GaugeAnnotation>[
+                                                      GaugeAnnotation(
+                                                        widget: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100
+                                                            ? Text(
+                                                                'clear', // Display the percentage value with 2 decimal places
+                                                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
+                                                              )
+                                                            : Text(
+                                                                _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toString() + '%', // Display the percentage value with 2 decimal places
+                                                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                                                              ),
+                                                        angle: 90,
+                                                        positionFactor: 0.5,
+                                                      ),
+                                                    ],
+                                                  )
+                                                ])),
+                                            trailing: PopupMenuButton(
+                                              icon: Icon(Icons.more_horiz, color: Colors.white70),
+                                              itemBuilder: (ctx) => [
+                                                _buildPopupMenuItem(context, 'メニュー削除', Icons.delete, Colors.red, FontWeight.bold, 1, {'user_training_no': List.from(_execTrainingMenu.keys)[index]}),
                                               ],
-                                              annotations: <GaugeAnnotation>[
-                                                GaugeAnnotation(
-                                                  widget: _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toInt() == 100
-                                                      ? Text(
-                                                          'clear', // Display the percentage value with 2 decimal places
-                                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
-                                                        )
-                                                      : Text(
-                                                          _execTrainingMenu[List.from(_execTrainingMenu.keys)[index]]['progress'].toString() + '%', // Display the percentage value with 2 decimal places
-                                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
-                                                        ),
-                                                  angle: 90,
-                                                  positionFactor: 0.5,
-                                                ),
-                                              ],
-                                            )
-                                          ])),
-                                      trailing: PopupMenuButton(
-                                        icon: Icon(Icons.more_horiz, color: Colors.white70),
-                                        itemBuilder: (ctx) => [
-                                          _buildPopupMenuItem(context, 'メニュー削除', Icons.delete, Colors.red, FontWeight.bold, 1, {'user_training_no': List.from(_execTrainingMenu.keys)[index]}),
-                                        ],
-                                      ),
-                                      // trailing: IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz)),
-                                      onTap: () {
-                                        var tgt_training_id = List.from(_execTrainingMenu.keys)[index];
-                                        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-                                          // 遷移先の画面としてリスト追加画面を指定
-                                          return ExecWorkoutScreen(user_training_id: tgt_training_id);
-                                        })).then((value) {
-                                          setState(() {
-                                            _execTrainingMenu = ref.read(execTrainingMenuProvider);
-                                          });
-                                        });
-                                      })
-                                ]);
-                              })),
-
+                                            ),
+                                            // trailing: IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz)),
+                                            onTap: () {
+                                              var tgt_training_id = List.from(_execTrainingMenu.keys)[index];
+                                              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                                                // 遷移先の画面としてリスト追加画面を指定
+                                                return ExecWorkoutScreen(user_training_id: tgt_training_id);
+                                              })).then((value) {
+                                                setState(() {
+                                                  _execTrainingMenu = ref.read(execTrainingMenuProvider);
+                                                });
+                                              });
+                                            }));
+                                  }))),
                   // メニュー選択ボタンを配置する
                   Container(
                     padding: EdgeInsets.only(left: 64, right: 64),
@@ -420,11 +431,12 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                                 },
                                               );
                                             }
+
                                             showDialog(
                                                 context: context,
                                                 barrierDismissible: false,
                                                 builder: (BuildContext contextModal) {
-                                                  return lottieDialogTemplate(context, 'ワークアウト完了🎉', 'assets/lottie_json/finish_trainings.json', {'width': 250, 'height': 250}, [actionButton(contextModal)]);
+                                                  return lottieDialogTemplate(context, 'ワークアウト完了🎉', 'assets/lottie_json/finish_trainings.json', {'width': 300, 'height': 300}, [actionButton(contextModal)]);
                                                 });
 
                                             // lottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
