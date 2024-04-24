@@ -54,3 +54,6 @@ final notificationProvider = StateProvider<Map>((ref) => {'あなた宛': [], '�
 
 // お知らせの未読件数を格納するためのStateProvider
 final unreadMessageCounterProvider = StateProvider<int>((ref) => 0);
+
+// 選択されているトレーニング内訳のpart_noを格納するためのStateProvider
+final selectedPartNoProvider = StateProvider<int?>((ref) => null);

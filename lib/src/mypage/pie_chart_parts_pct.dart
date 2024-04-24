@@ -1,108 +1,71 @@
-import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:uuid/v6.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:liftaholic_frontend/src/common/provider.dart';
 import 'package:liftaholic_frontend/src/common/resources/app_resources.dart';
-import 'package:liftaholic_frontend/src/common/dialogs.dart';
-import 'package:liftaholic_frontend/src/common/messages.dart';
 
-class BreakdownPieChartScreen extends StatefulWidget {
-  const BreakdownPieChartScreen({super.key});
+class BreakdownPieChartWidget extends ConsumerStatefulWidget {
+  BreakdownPieChartWidget({super.key, required this.pieChartData});
+
+  final List pieChartData;
 
   @override
-  State<StatefulWidget> createState() => _BreakdownPieChartScreenState();
+  _BreakdownPieChartWidgetState createState() => _BreakdownPieChartWidgetState();
 }
 
-class _BreakdownPieChartScreenState extends State<BreakdownPieChartScreen> {
+class _BreakdownPieChartWidgetState extends ConsumerState<BreakdownPieChartWidget> {
+  // ********************
+  // イニシャライザ設定
+  // ********************
+
+  bool _loading = false;
+
   int touchedIndex = 0;
 
-  List pieChartData = [];
-
-  // ユーザーのトレーニング内訳のデータを取得する
-  Future<void> _getPieChartData(uid) async {
-    // スピナー表示
-    // setState(() {
-    //   _loading = true;
-    // });
-
-    await dotenv.load(fileName: '.env');
-
-    //リクエスト先のurl
-    Uri url = Uri.parse("http://" + dotenv.get('API_HOST') + ":" + dotenv.get('API_PORT') + "/api/training_plan/get_user_training_plans/" + uid);
-
-    try {
-      //リクエストを投げる
-      // var response = await http.get(url).timeout(Duration(seconds: 10));
-      //リクエスト結果をコンソール出力
-      // debugPrint(response.body);
-
-      // var jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      var jsonResponse = {'statusCode': 200};
-      if (!mounted) return;
-      if (jsonResponse['statusCode'] == 200) {
-        setState(() {
-          pieChartData = [
-            {'value': 40, 'parts': '胸', 'color': AppColors.contentColorBlue, 'img_svg': 'ophthalmology-svgrepo-com.svg'},
-            {'value': 30, 'parts': '肩', 'color': AppColors.contentColorYellow, 'img_svg': 'librarian-svgrepo-com.svg'},
-            {'value': 20, 'parts': '脚', 'color': AppColors.contentColorPurple, 'img_svg': 'fitness-svgrepo-com.svg'},
-            {'value': 10, 'parts': '背中', 'color': AppColors.contentColorGreen, 'img_svg': 'worker-svgrepo-com.svg'},
-          ];
-        });
-      } else {
-        //リクエストに失敗した場合はエラーメッセージを表示
-        // AlertDialogTemplate(context, ERR_MSG_TITLE, jsonResponse['statusMessage']);
-      }
-    } catch (e) {
-      //リクエストに失敗した場合はエラーメッセージを表示
-      AlertDialogTemplate(context, ERR_MSG_TITLE, ERR_MSG_NETWORK);
-    } finally {
-      // setState(() {
-      //   // スピナー非表示
-      //   _loading = false;
-      // });
-    }
-  }
+  late List pieChartData = [];
 
   @override
   void initState() {
     super.initState();
 
-    _getPieChartData(FirebaseAuth.instance.currentUser?.uid);
+    pieChartData = widget.pieChartData;
   }
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1.3,
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: PieChart(
-          PieChartData(
-            pieTouchData: PieTouchData(
-              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                setState(() {
-                  if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
-                    touchedIndex = -1;
-                    return;
-                  }
-                  touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                });
-              },
+      child: _loading
+          ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
+          : AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                          touchedIndex = -1;
+                          return;
+                        }
+                        touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                        // 枠外の選択を許可しない
+                        if (touchedIndex != -1) {
+                          ref.read(selectedPartNoProvider.notifier).state = touchedIndex;
+                        }
+                      });
+                    },
+                  ),
+                  borderData: FlBorderData(
+                    show: false,
+                  ),
+                  sectionsSpace: 0,
+                  centerSpaceRadius: 0,
+                  sections: showingSections(),
+                ),
+              ),
             ),
-            borderData: FlBorderData(
-              show: false,
-            ),
-            sectionsSpace: 0,
-            centerSpaceRadius: 0,
-            sections: showingSections(),
-          ),
-        ),
-      ),
     );
   }
 
@@ -110,9 +73,8 @@ class _BreakdownPieChartScreenState extends State<BreakdownPieChartScreen> {
     return List.generate(pieChartData.length, (i) {
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 16.0 : 14.0;
-      // final radius = isTouched ? 110.0 : 100.0;
       final radius = isTouched ? 130.0 : 120.0;
-      final widgetSize = isTouched ? 75.0 : 60.0;
+      final widgetSize = isTouched ? 75.0 : 65.0;
       const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
 
       return PieChartSectionData(
@@ -127,11 +89,11 @@ class _BreakdownPieChartScreenState extends State<BreakdownPieChartScreen> {
           shadows: shadows,
         ),
         badgeWidget: _Badge(
-          'assets/icons/' + pieChartData[i]['img_svg'],
+          'assets/images/parts/' + pieChartData[i]['img_file'],
           size: widgetSize,
           borderColor: AppColors.contentColorBlack,
         ),
-        badgePositionPercentageOffset: .98,
+        badgePositionPercentageOffset: 1.05,
       );
     });
   }
@@ -139,11 +101,11 @@ class _BreakdownPieChartScreenState extends State<BreakdownPieChartScreen> {
 
 class _Badge extends StatelessWidget {
   const _Badge(
-    this.svgAsset, {
+    this.imgAsset, {
     required this.size,
     required this.borderColor,
   });
-  final String svgAsset;
+  final String imgAsset;
   final double size;
   final Color borderColor;
 
@@ -170,8 +132,8 @@ class _Badge extends StatelessWidget {
       ),
       padding: EdgeInsets.all(size * .15),
       child: Center(
-        child: SvgPicture.asset(
-          svgAsset,
+        child: Image.asset(
+          imgAsset,
         ),
       ),
     );

@@ -14,3 +14,5 @@ const int repsDefault = 1;
 const double kgsDefault = 0.25;
 // セット間インターバルのデフォルト値
 const String intervalDefault = '01:00';
+
+const int secPerDay = 3600 * 24;

@@ -40,6 +40,53 @@ Map getIntervalDuration(intervalStr) {
 }
 
 // ---------------------------
+// DatetimeをepochTimeに変換する
+// ---------------------------
+// ・params
+//   - dateStr: String
+//
+// ・return
+//   - result: int
+//
+int convertDate2EpochTime(String dateStr) {
+  List dateStrList = dateStr.split("-");
+  return (DateTime(int.parse(dateStrList[0]), int.parse(dateStrList[1]), int.parse(dateStrList[2])).millisecondsSinceEpoch ~/ 1000).toInt();
+}
+
+// ---------------------------
+// epochTimeをDatetimeに変換する
+// ---------------------------
+// ・params
+//   - epochTime: int
+//
+// ・return
+//   - result: Datetime
+//
+DateTime convertEpochTime2Date(int epochTime) {
+  return DateTime.fromMillisecondsSinceEpoch(epochTime * 1000, isUtc: false);
+}
+
+// ---------------------------
+// 日付に含まれている0を削除する
+// ---------------------------
+// ・params
+//   - dateStr: String MM/DD形式
+//
+// ・return
+//   - result: String MM/DD形式(zero削除版)
+//
+String deleteZero(String dateStr) {
+  var dateList = dateStr.split('/');
+  for (var i = 0; i < dateList.length; i++) {
+    // 一桁目が0だった場合は削除する
+    if (dateList[i][0] == '0') {
+      dateList[i] = dateList[i][1];
+    }
+  }
+  return dateList[0].toString() + '/' + dateList[1].toString();
+}
+
+// ---------------------------
 // 先頭文字が0だった場合はトリムする
 // ---------------------------
 // ・params

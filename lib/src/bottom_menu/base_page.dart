@@ -20,7 +20,7 @@ class BasePage extends HookConsumerWidget {
 
   Widget build(BuildContext context, WidgetRef ref) {
     // 初期ページを設定する
-    final currentTab = useState(TabItem.planning);
+    final currentTab = useState(TabItem.account);
 
     final unreadMessageCounter = ref.watch(unreadMessageCounterProvider);
 
