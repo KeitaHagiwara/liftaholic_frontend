@@ -57,3 +57,6 @@ final unreadMessageCounterProvider = StateProvider<int>((ref) => 0);
 
 // 選択されているトレーニング内訳のpart_noを格納するためのStateProvider
 final selectedPartNoProvider = StateProvider<int?>((ref) => null);
+
+// 選択されている棒グラフタイプを格納するためのStateProvider
+final selectedBarTypeProvider = StateProvider<String>((ref) => 'kg');

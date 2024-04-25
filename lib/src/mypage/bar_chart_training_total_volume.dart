@@ -36,7 +36,8 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
   late String startDateStr = "";
   late String endDateStr = "";
 
-  List<BarChartGroupData> barData = [];
+  List<BarChartGroupData> barDataKg = []; // kgの棒グラフのデータを格納するためのリスト
+  List<BarChartGroupData> barDataTime = []; // timeの棒グラフのデータを格納するためのリスト
 
   int days = 0;
   int epochTimeStart = 0;
@@ -44,6 +45,8 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
 
   double volumeMax = 120;
   double volumeMin = 0;
+  double timeElapsedMax = 60.0;
+  double timeElapsedMin = 0.0;
 
   DateFormat dateFormat = DateFormat('yyyy-MM-dd');
   DateFormat displayFormat = DateFormat('MM/dd');
@@ -63,7 +66,7 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
       // 棒グラフの初期化
       for (var d = 1; d < days + 1; d++) {
         var epochTime = epochTimeStart + secPerDay * d;
-        barData.add(
+        barDataKg.add(
           BarChartGroupData(x: epochTime, barRods: [
             BarChartRodData(toY: 0, width: barWidth),
           ]),
@@ -85,22 +88,35 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
 
   @override
   Widget build(BuildContext context) {
+    // 選択された部位
     var selectedPartNo = ref.watch(selectedPartNoProvider);
+    // 選択された棒グラフのタイプ
+    var selectedBarType = ref.watch(selectedBarTypeProvider);
 
     if (selectedPartNo != null && selectedPartNo != -1) {
       var _totalVolumeData = totalVolumeData[selectedPartNo.toString()];
       if (_totalVolumeData != null) {
-        barData = []; // リスト初期化
+        // リスト初期化
+        barDataKg = [];
+        barDataTime = [];
+
         setState(() {
           volumeMax = _totalVolumeData['volume_max'];
           volumeMin = _totalVolumeData['volume_min'];
 
+          timeElapsedMax = _totalVolumeData['time_elapsed_max'];
+          timeElapsedMin = _totalVolumeData['time_elapsed_min'];
+
           // {epochTime: totalVolume}のmapを作成する
           Map volumeMap = {};
+          // {epochTime: timeElapsed}のmapを作成する
+          Map timeMap = {};
           for (var i = 0; i < _totalVolumeData['volume_data'].length; i++) {
             var volumeData = _totalVolumeData['volume_data'][i]['volume'];
+            var timeElapsedData = _totalVolumeData['volume_data'][i]['time_elapsed'];
             var epochData = convertDate2EpochTime(_totalVolumeData['volume_data'][i]['datetime'].toString());
             volumeMap[epochData] = volumeData;
+            timeMap[epochData] = timeElapsedData;
           }
 
           // barGroups: 棒グラフのグループを表す
@@ -116,16 +132,26 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
             if (volumeMap.containsKey(epochTime)) {
               volume = volumeMap[epochTime];
             }
-            barData.add(
+            barDataKg.add(
               BarChartGroupData(x: epochTime, barRods: [
                 BarChartRodData(toY: volume.toDouble(), width: barWidth),
+              ]),
+            );
+
+            double timeElapsed = 0;
+            if (timeMap.containsKey(epochTime)) {
+              timeElapsed = timeMap[epochTime];
+            }
+            barDataTime.add(
+              BarChartGroupData(x: epochTime, barRods: [
+                BarChartRodData(toY: timeElapsed.toDouble(), width: barWidth),
               ]),
             );
           }
         });
       }
     } else {
-      var _totalVolumeData = {'volume_data': [], 'volume_max': 120.0, 'volume_min': 0.0};
+      var _totalVolumeData = {'volume_data': [], 'volume_max': 120.0, 'volume_min': 0.0, 'time_elapsed': [], 'time_elapsed_max': 60.0, 'time_elapsed_min': 0.0};
     }
 
     return Stack(
@@ -141,31 +167,25 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
             ),
             child: _loading
                 ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
-                : BarChart(
-                    mainData(),
-                  ),
+                : selectedBarType == 'kg'
+                    ? BarChart(kgData())
+                    : BarChart(timeData()),
           ),
         ),
         Padding(
           padding: EdgeInsets.only(left: 24, top: 0),
           // width: 60,
           // height: 34,
-          child: Text(
-            '(kg)',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-            ),
-          ),
+          child: selectedBarType == 'kg' ? Text('(kg)', style: TextStyle(fontSize: 12, color: Colors.white)) : Text('(min)', style: TextStyle(fontSize: 12, color: Colors.white)),
         ),
       ],
     );
   }
 
-  BarChartData mainData() {
+  BarChartData kgData() {
     return BarChartData(
         minY: 0,
-        maxY: volumeMax * 1.1,
+        maxY: volumeMax * 1.2,
         // 棒グラフの位置
         alignment: BarChartAlignment.spaceEvenly,
 
@@ -230,7 +250,78 @@ class _TotalVolumeBarChartWidgetState extends ConsumerState<TotalVolumeBarChartW
             );
           },
         ),
-        barGroups: barData);
+        barGroups: barDataKg);
+  }
+
+  BarChartData timeData() {
+    return BarChartData(
+        minY: 0,
+        maxY: timeElapsedMax * 1.2,
+        // 棒グラフの位置
+        alignment: BarChartAlignment.spaceEvenly,
+
+        // 棒グラフタッチ時の動作設定
+        barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+          tooltipBgColor: Colors.black,
+        )),
+
+        // グラフタイトルのパラメータ
+        titlesData: FlTitlesData(
+          show: true,
+          //右タイトル
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          //上タイトル
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          //下タイトル
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              // interval: 3600 * 24 * 7,
+              getTitlesWidget: bottomTitleWidgets,
+            ),
+          ),
+          // 左タイトル
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 42,
+              // interval: ((timeElapsedMax.toInt() / 4) / 10).ceil() * 10, // ここを変更
+              // getTitlesWidget: leftTitleWidgets,
+            ),
+          ),
+        ),
+
+        // 外枠表の線を表示/非表示
+        borderData: FlBorderData(
+            border: const Border(
+          top: BorderSide.none,
+          right: BorderSide.none,
+          left: BorderSide(width: 1),
+          bottom: BorderSide(width: 1),
+        )),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: true,
+          // horizontalInterval: ((timeElapsedMax / 4) / 10).ceil() * 10, // ここを変更
+          verticalInterval: 1,
+          getDrawingHorizontalLine: (value) {
+            return const FlLine(
+              color: AppColors.mainGridLineColor,
+              strokeWidth: 1,
+            );
+          },
+          getDrawingVerticalLine: (value) {
+            return const FlLine(
+              color: AppColors.mainGridLineColor,
+              strokeWidth: 1,
+            );
+          },
+        ),
+        barGroups: barDataTime);
   }
 
   // bottomの目盛りを規格化する

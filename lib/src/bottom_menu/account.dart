@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
 
 import 'package:liftaholic_frontend/src/login.dart';
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
@@ -40,6 +41,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   String endDateStr = "";
 
   DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+
+  List<bool> isSelected = [true, false];
+  List<String> barDataSelection = ['kg', 'time'];
+  String barDataSelected = 'kg';
 
   Future<void> reload() async {
     final instance = FirebaseAuth.instance;
@@ -278,13 +283,62 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                     pieChartData: pieChartData,
                   )),
 
+        // // 日付ごとの折れ線グラフ
+        // Container(
+        //     margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+        //     child: Text(
+        //       'トレーニングボリューム',
+        //       style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+        //     )),
+
         // 日付ごとの折れ線グラフ
-        Container(
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Container(
             margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
             child: Text(
               'トレーニングボリューム',
               style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-            )),
+            ),
+          ),
+          Container(
+              margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+              child: ToggleButtons(
+                // 枠の変更
+                borderWidth: 0.5,
+                borderColor: Colors.white,
+                borderRadius: BorderRadius.circular(5.0),
+                // 状態がONのボタンの文字色と枠の色
+                selectedColor: Colors.white,
+                selectedBorderColor: Colors.blue,
+                // 状態がONのボタンの背景色
+                fillColor: Colors.blue,
+
+                // ON/OFFの指定
+                isSelected: isSelected,
+                onPressed: (index) {
+                  setState(() {
+                    for (var i = 0; i < isSelected.length; i++) {
+                      if (i == index) {
+                        isSelected[i] = true;
+                      } else {
+                        isSelected[i] = false;
+                      }
+                    }
+                    ref.read(selectedBarTypeProvider.notifier).state = barDataSelection[index];
+                  });
+                },
+                // 各ボタン表示の子ウィジェットの指定
+                children: [
+                  for (var i = 0; i < barDataSelection.length; i++) ...{
+                    Padding(
+                      padding: EdgeInsets.all(5.0),
+                      child: Text(barDataSelection[i].toString()),
+                    ),
+                  }
+                ],
+              ))
+        ]),
+
         // SizedBox(child: AchievementLineChartScreen()),
         SizedBox(
             child: _loading_training_volume
@@ -293,7 +347,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                     totalVolumeData: totalVolumeData,
                     startDateStr: startDateStr,
                     endDateStr: endDateStr,
-                  ))
+                  )
+          )
       ])),
     ));
   }
