@@ -153,6 +153,7 @@ class _NortificationScreenState extends ConsumerState<NotificationScreen> with S
                         }),
                       );
                       // showModalBottomSheet(
+                      //   showDragHandle: true,
                       //   isScrollControlled: true,
                       //   context: context,
                       //   builder: (BuildContext context) {

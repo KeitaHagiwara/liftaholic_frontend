@@ -19,6 +19,7 @@ const padding_horizontal = 70;
 void showTrainingContentModal(context, Map training) {
   print(training);
   showModalBottomSheet(
+    showDragHandle: true,
     isScrollControlled: true,
     context: context,
     builder: (BuildContext context) {
@@ -29,14 +30,14 @@ void showTrainingContentModal(context, Map training) {
           child: Padding(
             padding: EdgeInsets.all(5),
             child: Column(children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                    icon: Icon(Icons.cancel),
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close the sheet.
-                    }),
-              ),
+              // Align(
+              //   alignment: Alignment.topRight,
+              //   child: IconButton(
+              //       icon: Icon(Icons.cancel),
+              //       onPressed: () {
+              //         Navigator.of(context).pop(); // Close the sheet.
+              //       }),
+              // ),
               // トレーニングタイトル
               SizedBox(
                 width: double.infinity,

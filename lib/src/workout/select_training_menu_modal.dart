@@ -91,7 +91,7 @@ class _StatefulBottomSheetState extends ConsumerState<StatefulBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 800,
+      height: double.infinity,
       width: double.infinity,
       child: SingleChildScrollView(
         child: Padding(
@@ -144,7 +144,7 @@ class _StatefulBottomSheetState extends ConsumerState<StatefulBottomSheet> {
                       child: ListTile(
                         // dense: true,
                         // leading: CircleAvatar(foregroundImage: NetworkImage(networkImageDomain + s3Folder + trainingMenuMaster[List.from(trainingMenuMaster.keys)[i]]['0']['part_image_file'])),
-                        leading: CircleAvatar(foregroundImage: AssetImage('assets/images/parts/' +  trainingMenuMaster[List.from(trainingMenuMaster.keys)[i]]['0']['part_image_file'])),
+                        leading: CircleAvatar(foregroundImage: AssetImage('assets/images/parts/' + trainingMenuMaster[List.from(trainingMenuMaster.keys)[i]]['0']['part_image_file'])),
                         title: Text(
                           List.from(trainingMenuMaster.keys)[i],
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

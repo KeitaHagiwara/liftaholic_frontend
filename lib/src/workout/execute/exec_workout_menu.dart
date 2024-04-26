@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:slide_to_act/slide_to_act.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:liftaholic_frontend/src/common/provider.dart';
@@ -272,17 +273,30 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
             : Container(
                 padding: EdgeInsets.symmetric(vertical: 20, horizontal: 5),
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(
-                    _trainingPlanName,
-                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-                  ),
-                  const SizedBox(height: 20),
-                  // Container(
-                  //     decoration: BoxDecoration(
-                  //   border: Border(
-                  //     bottom: BorderSide(width: 0.5, color: Colors.grey),
-                  //   ),
-                  // )),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text(''),
+                    Text(
+                      _trainingPlanName,
+                      style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                    ),
+                    IconButton(
+                        icon: Icon(Icons.edit_note),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return StatefulBottomSheet(
+                                userTrainingMenu: ref.read(userTrainingDataProvider)[ref.read(execPlanIdProvider)]['training_menu'],
+                                trainingMenuMaster: ref.read(trainingMenuMasterProvider),
+                                valueChanged: updateUserTrainingMenu,
+                              );
+                            }
+                          );
+                        })
+                  ]),
+
+                  const SizedBox(height: 10),
+
                   Flexible(
                       child: _execTrainingMenu.isEmpty
                           ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('トレーニングメニューが未登録です。')]))
@@ -363,96 +377,117 @@ class _ExecWorkoutMenuScreenState extends ConsumerState<ExecWorkoutMenuScreen> {
                                               });
                                             }));
                                   }))),
-                  // メニュー選択ボタンを配置する
-                  Container(
-                    padding: EdgeInsets.only(left: 64, right: 64),
-                    // 横幅いっぱいに広げる
-                    width: double.infinity,
-                    // リスト追加ボタン
-                    child: ElevatedButton(
-                      child: Text('メニュー選択', style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue, // background
-                      ),
-                      onPressed: () {
-                        // var uid = FirebaseAuth.instance.currentUser?.uid;
-                        // var training_plan_id = ref.read(execPlanIdProvider);
-                        // var training_menu_master = ref.read(trainingMenuMasterProvider);
-                        // メニュー追加用のモーダルを起動する
-                        // selectTrainingModal(context, uid, training_plan_id, training_menu_master);
-                        showModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return StatefulBottomSheet(
-                                userTrainingMenu: ref.read(userTrainingDataProvider)[ref.read(execPlanIdProvider)]['training_menu'],
-                                trainingMenuMaster: ref.read(trainingMenuMasterProvider),
-                                valueChanged: updateUserTrainingMenu,
-                              );
-                            });
-                      },
-                    ),
-                  ),
                   const SizedBox(height: 8),
                   // ワークアウト完了のボタンを配置する
                   Container(
-                      padding: EdgeInsets.only(left: 64, right: 64),
-                      width: double.infinity, // 横幅いっぱいに広げる
-                      child: ElevatedButton(
-                          child: Text('ワークアウト完了', style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          onPressed: () {
+                    padding: EdgeInsets.only(left: 64, right: 64),
+                    width: double.infinity, // 横幅いっぱいに広げる
+                    child: SlideAction(
+                      text: 'スライドして終了',
+                      textStyle: const TextStyle(fontSize: 16, color: Colors.white),
+                      animationDuration: const Duration(milliseconds: 500),
+                      reversed: true,
+                      sliderButtonIcon: Icon(
+                        Icons.stop_rounded,
+                        color: Colors.red,
+                      ),
+                      outerColor:  Colors.red,
+                      height: 50,
+                      sliderButtonIconSize: 60,
+                      sliderButtonIconPadding: 8,
+                      onSubmit: () {
+                        // スライドした時に実行したい処理を記載
+                        // 実績に登録する
+                        _completeWorkout().then((value) {
+                          if (value['statusCode'] == 200) {
+                            ref.read(isDoingWorkoutProvider.notifier).state = false;
+                            // ワークアウト終了時のアクションボタンを設定する
+                            Widget actionButton(contextModal) {
+                              return TextButton(
+                                child: Text("OK"),
+                                onPressed: () {
+                                  // 確認モーダルを削除する
+                                  Navigator.of(contextModal).pop();
+                                },
+                              );
+                            }
+
                             showDialog(
-                              context: context,
-                              builder: (BuildContext context_modal) {
-                                return AlertDialog(
-                                  title: Text('確認', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
-                                  content: Text('実施中のワークアウトを終了します。\nよろしいですか？'),
-                                  actions: [
-                                    TextButton(
-                                      child: Text("キャンセル"),
-                                      onPressed: () {
-                                        Navigator.of(context_modal).pop();
-                                      },
-                                    ),
-                                    TextButton(
-                                      child: Text("終了"),
-                                      onPressed: () {
-                                        // 実績に登録する
-                                        _completeWorkout().then((value) {
-                                          if (value['statusCode'] == 200) {
-                                            ref.read(isDoingWorkoutProvider.notifier).state = false;
-                                            // ワークアウト終了時のアクションボタンを設定する
-                                            Widget actionButton(contextModal) {
-                                              return TextButton(
-                                                child: Text("OK"),
-                                                onPressed: () {
-                                                  // 確認モーダルを削除する
-                                                  Navigator.of(contextModal).pop();
-                                                },
-                                              );
-                                            }
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext contextModal) {
+                                  return lottieDialogTemplate(context, 'ワークアウト完了🎉', 'assets/lottie_json/finish_trainings.json', {'width': 300, 'height': 300}, [actionButton(contextModal)]);
+                                });
 
-                                            showDialog(
-                                                context: context,
-                                                barrierDismissible: false,
-                                                builder: (BuildContext contextModal) {
-                                                  return lottieDialogTemplate(context, 'ワークアウト完了🎉', 'assets/lottie_json/finish_trainings.json', {'width': 300, 'height': 300}, [actionButton(contextModal)]);
-                                                });
+                            // lottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
+                          } else {
+                            //リクエストに失敗した場合はエラーメッセージを表示
+                            AlertDialogTemplate(context, ERR_MSG_TITLE, value['statusMessage']);
+                          }
+                        });
+                      },
+                    ),
+                  ),
 
-                                            // lottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
-                                          } else {
-                                            //リクエストに失敗した場合はエラーメッセージを表示
-                                            AlertDialogTemplate(context, ERR_MSG_TITLE, value['statusMessage']);
-                                          }
-                                        });
-                                        Navigator.of(context_modal).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          })),
+                  // Container(
+                  //     padding: EdgeInsets.only(left: 64, right: 64),
+                  //     width: double.infinity, // 横幅いっぱいに広げる
+                  //     child: ElevatedButton(
+                  //         child: Text('ワークアウト完了', style: TextStyle(color: Colors.white)),
+                  //         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  //         onPressed: () {
+                  //           showDialog(
+                  //             context: context,
+                  //             builder: (BuildContext context_modal) {
+                  //               return AlertDialog(
+                  //                 title: Text('確認', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
+                  //                 content: Text('実施中のワークアウトを終了します。\nよろしいですか？'),
+                  //                 actions: [
+                  //                   TextButton(
+                  //                     child: Text("キャンセル"),
+                  //                     onPressed: () {
+                  //                       Navigator.of(context_modal).pop();
+                  //                     },
+                  //                   ),
+                  //                   TextButton(
+                  //                     child: Text("終了"),
+                  //                     onPressed: () {
+                  //                       // 実績に登録する
+                  //                       _completeWorkout().then((value) {
+                  //                         if (value['statusCode'] == 200) {
+                  //                           ref.read(isDoingWorkoutProvider.notifier).state = false;
+                  //                           // ワークアウト終了時のアクションボタンを設定する
+                  //                           Widget actionButton(contextModal) {
+                  //                             return TextButton(
+                  //                               child: Text("OK"),
+                  //                               onPressed: () {
+                  //                                 // 確認モーダルを削除する
+                  //                                 Navigator.of(contextModal).pop();
+                  //                               },
+                  //                             );
+                  //                           }
+
+                  //                           showDialog(
+                  //                               context: context,
+                  //                               barrierDismissible: false,
+                  //                               builder: (BuildContext contextModal) {
+                  //                                 return lottieDialogTemplate(context, 'ワークアウト完了🎉', 'assets/lottie_json/finish_trainings.json', {'width': 300, 'height': 300}, [actionButton(contextModal)]);
+                  //                               });
+
+                  //                           // lottieDialogTemplate(context, 'ワークアウト完了🎉', value['statusMessage'], 'assets/lottie_json/finish_trainings.json');
+                  //                         } else {
+                  //                           //リクエストに失敗した場合はエラーメッセージを表示
+                  //                           AlertDialogTemplate(context, ERR_MSG_TITLE, value['statusMessage']);
+                  //                         }
+                  //                       });
+                  //                       Navigator.of(context_modal).pop();
+                  //                     },
+                  //                   ),
+                  //                 ],
+                  //               );
+                  //             },
+                  //           );
+                  //         })),
                 ])));
   }
 }

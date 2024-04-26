@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:slide_to_act/slide_to_act.dart';
 // import 'package:flutter_slidable/flutter_slidable.dart';
 
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
@@ -400,6 +401,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                 itemCount: ref.watch(userTrainingDataProvider).length,
                                 itemBuilder: (context, index) {
                                   return Card(
+                                      elevation: 9,
                                       color: List.from(ref.read(userTrainingDataProvider).keys)[index] == _selectedPlanId ? Colors.blue : null,
                                       child: InkWell(
                                         onTap: () {
@@ -495,6 +497,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                             itemCount: ref.read(execTrainingMenuProvider).length,
                                             itemBuilder: (BuildContext context, int index) {
                                               return Card(
+                                                  elevation: 9,
                                                   margin: EdgeInsets.symmetric(vertical: 3, horizontal: 10),
                                                   child: Column(children: <Widget>[
                                                     ListTile(
@@ -538,41 +541,64 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                                   ]));
                                             })),
                             Container(
-                              padding: EdgeInsets.only(left: 64, right: 64),
+                              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 64),
                               width: double.infinity, // 横幅いっぱいに広げる
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                onPressed: ref.watch(execPlanIdProvider) == ''
+                              child: SlideAction(
+                                text: 'スライドして開始',
+                                textStyle: const TextStyle(fontSize: 16, color: Colors.white),
+                                animationDuration: const Duration(milliseconds: 500),
+                                sliderButtonIcon: Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: ref.read(execPlanIdProvider) == '' ? Colors.grey[800] : Colors.green,
+                                ),
+                                outerColor: ref.read(execPlanIdProvider) == '' ? Colors.grey[800] : Colors.green,
+                                height: 50,
+                                sliderButtonIconSize: 60,
+                                sliderButtonIconPadding: 8,
+                                onSubmit: ref.read(execPlanIdProvider) == ''
                                     ? null
                                     : () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext contextModal) {
-                                            return AlertDialog(
-                                              title: Text('ワークアウト', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
-                                              content: Text('選択したトレーニングプランを開始します。よろしいですか？'),
-                                              actions: [
-                                                TextButton(
-                                                  child: Text("キャンセル"),
-                                                  onPressed: () {
-                                                    Navigator.of(contextModal).pop();
-                                                  },
-                                                ),
-                                                TextButton(
-                                                  child: Text("開始"),
-                                                  onPressed: () {
-                                                    ref.read(isDoingWorkoutProvider.notifier).state = true;
-                                                    Navigator.of(contextModal).pop();
-                                                  },
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
+                                        // スライドした時に実行したい処理を記載
+                                        ref.read(isDoingWorkoutProvider.notifier).state = true;
                                       },
-                                child: Text('ワークアウト開始', style: TextStyle(color: Colors.white)),
                               ),
-                            )
+                            ),
+                            // Container(
+                            //   padding: EdgeInsets.only(left: 64, right: 64),
+                            //   width: double.infinity, // 横幅いっぱいに広げる
+                            //   child: ElevatedButton(
+                            //     style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                            //     onPressed: ref.watch(execPlanIdProvider) == ''
+                            //         ? null
+                            //         : () {
+                            //             showDialog(
+                            //               context: context,
+                            //               builder: (BuildContext contextModal) {
+                            //                 return AlertDialog(
+                            //                   title: Text('ワークアウト', style: TextStyle(fontWeight: FontWeight.bold).copyWith(fontSize: 18)),
+                            //                   content: Text('選択したトレーニングプランを開始します。よろしいですか？'),
+                            //                   actions: [
+                            //                     TextButton(
+                            //                       child: Text("キャンセル"),
+                            //                       onPressed: () {
+                            //                         Navigator.of(contextModal).pop();
+                            //                       },
+                            //                     ),
+                            //                     TextButton(
+                            //                       child: Text("開始"),
+                            //                       onPressed: () {
+                            //                         ref.read(isDoingWorkoutProvider.notifier).state = true;
+                            //                         Navigator.of(contextModal).pop();
+                            //                       },
+                            //                     ),
+                            //                   ],
+                            //                 );
+                            //               },
+                            //             );
+                            //           },
+                            //     child: Text('ワークアウト開始', style: TextStyle(color: Colors.white)),
+                            //   ),
+                            // )
                           ]))
                 : ExecWorkoutMenuScreen() // ワークアウト実施中の場合
         );

@@ -241,6 +241,7 @@ class _EditTrainingSetScreenState extends ConsumerState<EditTrainingSetScreen> {
                       // ボタンをクリックした時の処理
                       onPressed: () {
                         showModalBottomSheet(
+                            showDragHandle: true,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20.0),
                             ),
@@ -252,17 +253,17 @@ class _EditTrainingSetScreenState extends ConsumerState<EditTrainingSetScreen> {
                                     // height: double.infinity,
                                     // width: double.infinity,
                                     child: CupertinoTimerPicker(
-                                      mode: CupertinoTimerPickerMode.ms,
-                                      minuteInterval: 1,
-                                      secondInterval: 1,
-                                      initialTimerDuration: _intervalTimer,
-                                      onTimerDurationChanged: (Duration changedtimer) {
-                                        setState(() {
-                                          _intervalTimer = changedtimer;
-                                          _intervalStr = _intervalTimer.toString().split('.').first.split(':')[1] + ':' + _intervalTimer.toString().split('.').first.split(':')[2];
-                                        });
-                                      },
-                                    ),
+                                        mode: CupertinoTimerPickerMode.ms,
+                                        minuteInterval: 1,
+                                        secondInterval: 1,
+                                        initialTimerDuration: _intervalTimer,
+                                        onTimerDurationChanged: (Duration changedtimer) {
+                                          setState(() {
+                                            _intervalTimer = changedtimer;
+                                            _intervalStr = _intervalTimer.toString().split('.').first.split(':')[1] + ':' + _intervalTimer.toString().split('.').first.split(':')[2];
+                                          });
+                                        },
+                                      ),
                                   ));
                             });
                       },

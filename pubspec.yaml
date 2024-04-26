@@ -36,6 +36,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   uuid: ^4.3.3
   badges: ^3.1.2
+  slide_to_act: ^2.0.2
 
 dev_dependencies:
   flutter_test:

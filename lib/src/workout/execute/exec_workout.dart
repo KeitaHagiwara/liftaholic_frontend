@@ -154,6 +154,7 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                               itemCount: _exec_training_menu[_user_training_id]['sets_achieve'].length,
                               itemBuilder: (BuildContext context, int index) {
                                 return Card(
+                                    elevation: 9,
                                     child: Slidable(
                                         endActionPane: ActionPane(motion: const BehindMotion(), children: [
                                           SlidableAction(
@@ -197,6 +198,7 @@ class _ExecWorkoutScreenState extends ConsumerState<ExecWorkoutScreen> {
                         // ボタンをクリックした時の処理
                         onPressed: () {
                           showModalBottomSheet(
+                              showDragHandle: true,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
@@ -378,25 +380,22 @@ class _IntervalModalScreenState extends ConsumerState<IntervalModalScreen> {
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         if (_currentSeconds > 0) ...{
           // 数値の横幅によるブレをなくす
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              for (var i = 0; i < 5; i++) ...{
-                if (i == 2)...{
-                  Container(
-                    alignment: Alignment.center,
-                    child: Text(":", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40)),
-                  ),
-                } else...{
-                  Container(
-                    alignment: Alignment.center,
-                    width: 25,
-                    child: Text(timerString(_currentSeconds).substring(i, i+1), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40)),
-                  ),
-                }
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            for (var i = 0; i < 5; i++) ...{
+              if (i == 2) ...{
+                Container(
+                  alignment: Alignment.center,
+                  child: Text(":", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40)),
+                ),
+              } else ...{
+                Container(
+                  alignment: Alignment.center,
+                  width: 25,
+                  child: Text(timerString(_currentSeconds).substring(i, i + 1), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40)),
+                ),
               }
-            ]
-          ),
+            }
+          ]),
         } else ...{
           Text('インターバルは終了です。\n次のセットに進んでください。', style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16)),
         }

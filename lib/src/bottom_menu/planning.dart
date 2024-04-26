@@ -12,6 +12,7 @@ import 'package:lottie/lottie.dart';
 
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
 import 'package:liftaholic_frontend/src/common/messages.dart';
+import 'package:liftaholic_frontend/src/common/provider.dart';
 import 'package:liftaholic_frontend/src/planning/line_chart_achievement.dart';
 import 'package:liftaholic_frontend/src/planning/show_calendar_modal.dart';
 import 'package:liftaholic_frontend/src/firebase/user_info.dart';
@@ -34,6 +35,9 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
 
   // ユーザーのトレーニングデータのマスタ
   // Map _userTrainingData = {};
+
+  int dateRangeStart = 2000;
+  int dateRangeEnd = 2999;
 
   DateTime _focusedDay = DateTime.now(); // 現在日
   CalendarFormat _calendarFormat = CalendarFormat.month; // 月フォーマット
@@ -165,6 +169,15 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
     }
   }
 
+  // カレンダーの範囲を設定する
+  void _setCalendarRange() {
+    final baseDate = DateTime.now();
+    setState(() {
+      dateRangeStart = baseDate.year - 1;
+      dateRangeEnd = baseDate.year + 1;
+    });
+  }
+
   // 削除したトレーニングプランを画面更新を行う
   // void _deleteRegisteredPlan(training_plan_id) async {
   //   final deleted_plan_id = await Navigator.of(context).push(
@@ -224,6 +237,9 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
         _updateUserNameDialog(context);
       });
     }
+
+    // カレンダーの範囲を設定する
+    _setCalendarRange();
     _getTrainingPlans(uid);
   }
 
@@ -354,20 +370,17 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                   // --------------------
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text(
-                        'スケジュール',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18),
-                      ),
-                      IconButton(icon: Icon(Icons.add_circle), onPressed: () async {})
-                    ]),
+                    child: Text(
+                      'スケジュール',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(0.0),
                     child: TableCalendar(
                         locale: 'ja_JP',
-                        firstDay: DateTime.utc(2023, 1, 1),
-                        lastDay: DateTime.utc(2024, 12, 31),
+                        firstDay: DateTime.utc(dateRangeStart, 1, 1),
+                        lastDay: DateTime.utc(dateRangeEnd, 12, 31),
                         focusedDay: _focusedDay,
                         eventLoader: (date) {
                           // イベントドット処理
@@ -435,6 +448,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                           // 選択された日付が2回タップされた場合にモーダルを表示する
                           if (_selectedDay == selectedDay) {
                             print(_selectedEvents);
+                            print(ref.read(userTrainingDataProvider));
                             showCalendarModal(context, uid, selectedDay, ['test1', 'test2']);
                           }
 
@@ -472,14 +486,22 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                   // 予実の折れ線グラフここから
                   // --------------------
                   Container(
-                      margin: EdgeInsets.only(left: 15.0, top: 20.0),
-                      alignment: Alignment.centerLeft, //任意のプロパティ
-                      width: double.infinity,
-                      child: Text(
-                        '予定と実績',
-                        style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-                      )),
-                  SizedBox(child: LineChartAchievementScreen()),
+                      margin: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(children: [
+                        Container(
+                            margin: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                            alignment: Alignment.centerLeft, //任意のプロパティ
+                            width: double.infinity,
+                            child: Text(
+                              '予定と実績',
+                              style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                            )),
+                        SizedBox(child: LineChartAchievementScreen()),
+                      ])),
                   // --------------------
                   // 予実の折れ線グラフここまで
                   // --------------------
