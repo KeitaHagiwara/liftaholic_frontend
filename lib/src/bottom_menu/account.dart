@@ -45,6 +45,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   List<bool> isSelected = [true, false];
   List<String> barDataSelection = ['kg', 'time'];
   String barDataSelected = 'kg';
+  Map partNameDict = {};
 
   Future<void> reload() async {
     final instance = FirebaseAuth.instance;
@@ -75,14 +76,16 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         setState(() {
           pieChartData = [];
           for (var i = 0; i < data.length; i++) {
+            var part_name = data[i]['part_name'];
             var img_file_name = data[i]['part_image_file'];
             var chart_color_key = img_file_name.split('.')[0];
             pieChartData.add({
               'value': data[i]['value'],
-              'parts': data[i]['part_name'],
+              'parts': part_name,
               'color': partsColors[chart_color_key],
               'img_file': img_file_name,
             });
+            partNameDict[i] = part_name;
           }
         });
       } else {
@@ -212,144 +215,171 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: RefreshIndicator(
-      color: Colors.blue, // インジケータの色
-      backgroundColor: Colors.white, // インジケータの背景色
-      displacement: 50.0, // リストの端から50ピクセル下に表示
-      edgeOffset: 10.0, // リストの端を10ピクセル下にオーバーライド
-      onRefresh: () async {
-        // 日付の情報を更新する
-        _calcDateTime();
-        // トレーニング内訳のデータを更新する
-        _getPieChartData(uid);
-        // トレーニングボリュームのデータを更新する
-        _getTotalVolumeData(uid);
-      },
-      child: Center(
-          child: ListView(children: [
-        // -------------------
-        // アカウント用のヘッダー
-        // -------------------
-        UserAccountsDrawerHeader(
-          accountName: Text(
-            username!,
-            style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white, fontSize: 20),
-          ),
-          accountEmail: Text(
-            email!,
-            style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white, fontSize: 14),
-          ),
-          currentAccountPicture: GestureDetector(
-              onTap: () {
-                print('icon tapped');
-              },
-              child: CircleAvatar(
-                foregroundImage: AssetImage("assets/images/account/default_icon.png"),
-              )),
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(
-                "assets/images/account/default_account_bg.png",
-              ),
-              fit: BoxFit.fill,
-            ),
-          ),
-          otherAccountsPictures: [
-            PopupMenuButton(
-              icon: Icon(Icons.more_vert, size: 25, color: Colors.white),
-              itemBuilder: (ctx) => [
-                _buildPopupMenuItem(context, 'ログアウト', Icons.logout, Colors.red, FontWeight.bold, 1, {}),
-              ],
-            ),
-          ],
+    return Column(children: [
+      // -------------------
+      // アカウント用のヘッダー
+      // -------------------
+      UserAccountsDrawerHeader(
+        accountName: Text(
+          username!,
+          style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white, fontSize: 20),
         ),
-
-        // -------------------
-        // コンテンツ
-        // -------------------
-        const SizedBox(height: 15),
-        // 内訳の円フラグ
-        Container(
-            margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-            child: Text(
-              '月間のトレーニング内訳',
-              style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+        accountEmail: Text(
+          email!,
+          style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white, fontSize: 14),
+        ),
+        currentAccountPicture: GestureDetector(
+            onTap: () {
+              print('icon tapped');
+            },
+            child: CircleAvatar(
+              foregroundImage: AssetImage("assets/images/account/default_icon.png"),
             )),
-        SizedBox(
-            child: _loading_training_breakdown
-                ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
-                : BreakdownPieChartWidget(
-                    pieChartData: pieChartData,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              "assets/images/account/default_account_bg.png",
+            ),
+            fit: BoxFit.fill,
+          ),
+        ),
+        otherAccountsPictures: [
+          PopupMenuButton(
+            icon: Icon(Icons.more_vert, size: 25, color: Colors.white),
+            itemBuilder: (ctx) => [
+              _buildPopupMenuItem(context, 'ログアウト', Icons.logout, Colors.red, FontWeight.bold, 1, {}),
+            ],
+          ),
+        ],
+      ),
+
+      // -------------------
+      // コンテンツ
+      // -------------------
+      Expanded(
+          child: RefreshIndicator(
+        color: Colors.blue, // インジケータの色
+        backgroundColor: Colors.white, // インジケータの背景色
+        displacement: 50.0, // リストの端から50ピクセル下に表示
+        edgeOffset: 10.0, // リストの端を10ピクセル下にオーバーライド
+        onRefresh: () async {
+          // 日付の情報を更新する
+          _calcDateTime();
+          // トレーニング内訳のデータを更新する
+          _getPieChartData(uid);
+          // トレーニングボリュームのデータを更新する
+          _getTotalVolumeData(uid);
+        },
+        child: Container(
+            margin: EdgeInsets.all(10),
+            child: ListView(children: [
+              // 内訳の円フラグ
+              Container(
+                  margin: EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      // 内訳の円フラグ
+                      Container(
+                          alignment: Alignment.centerLeft,
+                          margin: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            '月間のトレーニング内訳',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18.0),
+                          )),
+                      Container(
+                          child: _loading_training_breakdown
+                              ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
+                              : BreakdownPieChartWidget(
+                                  pieChartData: pieChartData,
+                                )),
+                    ],
                   )),
 
-        // // 日付ごとの折れ線グラフ
-        // Container(
-        //     margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-        //     child: Text(
-        //       'トレーニングボリューム',
-        //       style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-        //     )),
+              // 日付ごとの折れ線グラフ
+              Container(
+                  // margin: EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                          alignment: Alignment.centerLeft,
+                          margin: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                            Container(
+                              margin: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+                              child: ref.watch(selectedPartNoProvider) == null
+                                ? Text(
+                                    'トレーニングボリューム',
+                                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                                  )
+                                : Text(
+                                    'トレーニングボリューム\n (' + partNameDict[ref.read(selectedPartNoProvider)] + ')',
+                                    style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
+                                  ),
+                            ),
+                            Container(
+                                margin: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+                                child: ToggleButtons(
+                                  // 枠の変更
+                                  borderWidth: 0.5,
+                                  borderColor: Colors.white,
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  // 状態がONのボタンの文字色と枠の色
+                                  selectedColor: Colors.white,
+                                  selectedBorderColor: Colors.blue,
+                                  // 状態がONのボタンの背景色
+                                  fillColor: Colors.blue,
 
-        // 日付ごとの折れ線グラフ
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-            child: Text(
-              'トレーニングボリューム',
-              style: TextStyle(fontWeight: FontWeight.bold).copyWith(color: Colors.white70, fontSize: 18.0),
-            ),
-          ),
-          Container(
-              margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-              child: ToggleButtons(
-                // 枠の変更
-                borderWidth: 0.5,
-                borderColor: Colors.white,
-                borderRadius: BorderRadius.circular(5.0),
-                // 状態がONのボタンの文字色と枠の色
-                selectedColor: Colors.white,
-                selectedBorderColor: Colors.blue,
-                // 状態がONのボタンの背景色
-                fillColor: Colors.blue,
-
-                // ON/OFFの指定
-                isSelected: isSelected,
-                onPressed: (index) {
-                  setState(() {
-                    for (var i = 0; i < isSelected.length; i++) {
-                      if (i == index) {
-                        isSelected[i] = true;
-                      } else {
-                        isSelected[i] = false;
-                      }
-                    }
-                    ref.read(selectedBarTypeProvider.notifier).state = barDataSelection[index];
-                  });
-                },
-                // 各ボタン表示の子ウィジェットの指定
-                children: [
-                  for (var i = 0; i < barDataSelection.length; i++) ...{
-                    Padding(
-                      padding: EdgeInsets.all(5.0),
-                      child: Text(barDataSelection[i].toString()),
-                    ),
-                  }
-                ],
-              ))
-        ]),
-
-        // SizedBox(child: AchievementLineChartScreen()),
-        SizedBox(
-            child: _loading_training_volume
-                ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
-                : TotalVolumeBarChartWidget(
-                    totalVolumeData: totalVolumeData,
-                    startDateStr: startDateStr,
-                    endDateStr: endDateStr,
-                  )
-          )
-      ])),
-    ));
+                                  // ON/OFFの指定
+                                  isSelected: isSelected,
+                                  onPressed: (index) {
+                                    setState(() {
+                                      for (var i = 0; i < isSelected.length; i++) {
+                                        if (i == index) {
+                                          isSelected[i] = true;
+                                        } else {
+                                          isSelected[i] = false;
+                                        }
+                                      }
+                                      ref.read(selectedBarTypeProvider.notifier).state = barDataSelection[index];
+                                    });
+                                  },
+                                  // 各ボタン表示の子ウィジェットの指定
+                                  children: [
+                                    for (var i = 0; i < barDataSelection.length; i++) ...{
+                                      Padding(
+                                        padding: EdgeInsets.all(5.0),
+                                        child: Text(barDataSelection[i].toString()),
+                                      ),
+                                    }
+                                  ],
+                                ))
+                          ])),
+                      Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[850],
+                            borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(10),
+                            ),
+                          ),
+                          child: _loading_training_volume
+                              ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
+                              : TotalVolumeBarChartWidget(
+                                  totalVolumeData: totalVolumeData,
+                                  startDateStr: startDateStr,
+                                  endDateStr: endDateStr,
+                                )),
+                    ],
+                  )),
+            ])),
+      )),
+    ]);
   }
 }

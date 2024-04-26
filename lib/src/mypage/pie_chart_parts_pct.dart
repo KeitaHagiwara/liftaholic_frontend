@@ -35,7 +35,7 @@ class _BreakdownPieChartWidgetState extends ConsumerState<BreakdownPieChartWidge
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1.3,
+      aspectRatio: 1.4,
       child: _loading
           ? const Center(child: CircularProgressIndicator()) // _loadingがtrueならスピナー表示
           : AspectRatio(
