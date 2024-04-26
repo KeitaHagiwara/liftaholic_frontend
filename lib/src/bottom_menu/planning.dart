@@ -9,10 +9,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:lottie/lottie.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:liftaholic_frontend/src/common/dialogs.dart';
 import 'package:liftaholic_frontend/src/common/messages.dart';
 import 'package:liftaholic_frontend/src/common/provider.dart';
+import 'package:liftaholic_frontend/src/common/admob_helper.dart';
 import 'package:liftaholic_frontend/src/planning/line_chart_achievement.dart';
 import 'package:liftaholic_frontend/src/planning/show_calendar_modal.dart';
 import 'package:liftaholic_frontend/src/firebase/user_info.dart';
@@ -248,6 +250,11 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
   // ********************
   @override
   Widget build(BuildContext context) {
+    // bannerの情報をロードする
+    final bannerId = getTestAdBannerUnitId();
+    BannerAd myBanner = BannerAd(adUnitId: bannerId, size: AdSize.banner, request: const AdRequest(), listener: const BannerAdListener());
+    myBanner.load();
+
     return Scaffold(
       // appBar: AppBar(
       //   title: Text(
@@ -369,115 +376,103 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                   // カレンダーここから
                   // --------------------
                   Container(
-                    margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-                    child: Text(
-                      'スケジュール',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(0.0),
-                    child: TableCalendar(
-                        locale: 'ja_JP',
-                        firstDay: DateTime.utc(dateRangeStart, 1, 1),
-                        lastDay: DateTime.utc(dateRangeEnd, 12, 31),
-                        focusedDay: _focusedDay,
-                        eventLoader: (date) {
-                          // イベントドット処理
-                          return _calendarMap[date] ?? [];
-                        },
-                        calendarBuilders: CalendarBuilders(markerBuilder: (context, date, events) {
-                          if (events.isNotEmpty) {
-                            return Positioned(
-                              right: 5,
-                              bottom: 5,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.red[300],
-                                ),
-                                width: 16.0,
-                                height: 16.0,
-                                child: Center(
-                                  child: Text(
-                                    '${events.length}',
-                                    style: TextStyle().copyWith(
-                                      color: Colors.white,
-                                      fontSize: 12.0,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          ;
-                        }),
-                        calendarStyle: CalendarStyle(
-                          // defaultTextStyle:TextStyle(color: Colors.blue),
-                          // weekNumberTextStyle:TextStyle(color: Colors.red),
-                          selectedDecoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          // todayDecoration: BoxDecoration(
-                          //   color: Colors.red[300],
-                          //   shape: BoxShape.circle,
+                      margin: EdgeInsets.only(top: 0),
+                      child: Column(
+                        children: [
+                          // Container(
+                          //   alignment: Alignment.centerLeft,
+                          //   margin: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+                          //   child: Text(
+                          //     'スケジュール',
+                          //     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70, fontSize: 18),
+                          //   ),
                           // ),
-                          weekendTextStyle: TextStyle(color: Colors.orange),
-                        ),
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                        ),
-                        calendarFormat: _calendarFormat, // デフォを月表示に設定
-                        onFormatChanged: (format) {
-                          // 「月」「週」変更
-                          if (_calendarFormat != format) {
-                            setState(() {
-                              _calendarFormat = format;
-                            });
-                          }
-                        },
-                        // 選択日のアニメーション
-                        selectedDayPredicate: (day) {
-                          return isSameDay(_selectedDay, day);
-                        },
-                        // 日付が選択されたときの処理
-                        onDaySelected: (selectedDay, focusedDay) {
-                          // 選択された日付が2回タップされた場合にモーダルを表示する
-                          if (_selectedDay == selectedDay) {
-                            print(_selectedEvents);
-                            print(ref.read(userTrainingDataProvider));
-                            showCalendarModal(context, uid, selectedDay, ['test1', 'test2']);
-                          }
+                          Padding(
+                            padding: const EdgeInsets.all(0.0),
+                            child: TableCalendar(
+                                locale: 'ja_JP',
+                                firstDay: DateTime.utc(dateRangeStart, 1, 1),
+                                lastDay: DateTime.utc(dateRangeEnd, 12, 31),
+                                focusedDay: _focusedDay,
+                                eventLoader: (date) {
+                                  // イベントドット処理
+                                  return _calendarMap[date] ?? [];
+                                },
+                                calendarBuilders: CalendarBuilders(markerBuilder: (context, date, events) {
+                                  if (events.isNotEmpty) {
+                                    return Positioned(
+                                      right: 5,
+                                      bottom: 5,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.red[300],
+                                        ),
+                                        width: 16.0,
+                                        height: 16.0,
+                                        child: Center(
+                                          child: Text(
+                                            '${events.length}',
+                                            style: TextStyle().copyWith(
+                                              color: Colors.white,
+                                              fontSize: 12.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  ;
+                                }),
+                                calendarStyle: CalendarStyle(
+                                  // defaultTextStyle:TextStyle(color: Colors.blue),
+                                  // weekNumberTextStyle:TextStyle(color: Colors.red),
+                                  selectedDecoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  // todayDecoration: BoxDecoration(
+                                  //   color: Colors.red[300],
+                                  //   shape: BoxShape.circle,
+                                  // ),
+                                  weekendTextStyle: TextStyle(color: Colors.orange),
+                                ),
+                                headerStyle: HeaderStyle(
+                                  formatButtonVisible: false,
+                                  titleCentered: true,
+                                ),
+                                calendarFormat: _calendarFormat, // デフォを月表示に設定
+                                onFormatChanged: (format) {
+                                  // 「月」「週」変更
+                                  if (_calendarFormat != format) {
+                                    setState(() {
+                                      _calendarFormat = format;
+                                    });
+                                  }
+                                },
+                                // 選択日のアニメーション
+                                selectedDayPredicate: (day) {
+                                  return isSameDay(_selectedDay, day);
+                                },
+                                // 日付が選択されたときの処理
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  // 選択された日付が2回タップされた場合にモーダルを表示する
+                                  if (_selectedDay == selectedDay) {
+                                    print(_selectedEvents);
+                                    print(ref.read(userTrainingDataProvider));
+                                    showCalendarModal(context, uid, selectedDay, ['test1', 'test2']);
+                                  }
 
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                            _selectedEvents = _calendarEvents[selectedDay] ?? [];
-                          });
-                        }),
-                  ),
-                  // タップした時表示するリスト
-                  // Expanded(
-                  //   child: _selectedEvents.length == 0
-                  //       ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text('予定はありません。')]))
-                  //       : ListView.builder(
-                  //           itemCount: _selectedEvents.length,
-                  //           itemBuilder: (context, index) {
-                  //             final event = _selectedEvents[index];
-                  //             return Card(
-                  //               child: ListTile(
-                  //                 title: Text(event),
-                  //                 onTap: () {
-                  //                   print(event);
-                  //                 },
-                  //               ),
-                  //             );
-                  //           },
-                  //         ),
-                  // ),
+                                  setState(() {
+                                    _selectedDay = selectedDay;
+                                    _focusedDay = focusedDay;
+                                    _selectedEvents = _calendarEvents[selectedDay] ?? [];
+                                  });
+                                }),
+                          ),
+                        ],
+                      )),
                   // --------------------
                   // カレンダーここまで
                   // --------------------
@@ -504,6 +499,19 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                       ])),
                   // --------------------
                   // 予実の折れ線グラフここまで
+                  // --------------------
+
+                  // --------------------
+                  // バナー広告ここから
+                  // --------------------
+                  Container(
+                    width: myBanner.size.width.toDouble(),
+                    height: myBanner.size.height.toDouble(),
+                    alignment: Alignment.center,
+                    child: AdWidget(ad: myBanner),
+                  ),
+                  // --------------------
+                  // バナー広告ここまで
                   // --------------------
                 ])),
     );

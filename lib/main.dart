@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'src/app.dart';
 import 'src/firebase/firebase_options.dart';
+import 'src/common/admob_helper.dart';
 
 Future<void> main() async {
   // Firebaseに接続する
@@ -16,6 +17,8 @@ Future<void> main() async {
   );
   // カレンダーを日本語表記にする
   initializeDateFormatting('ja');
+  // AdMobを初期化する
+  AdmobHelper.initialization();
   runApp(
     ProviderScope(
       child: MyApp()

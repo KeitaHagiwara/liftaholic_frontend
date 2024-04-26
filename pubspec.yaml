@@ -37,6 +37,7 @@ dependencies:
   uuid: ^4.3.3
   badges: ^3.1.2
   slide_to_act: ^2.0.2
+  google_mobile_ads: ^5.0.0
 
 dev_dependencies:
   flutter_test:
